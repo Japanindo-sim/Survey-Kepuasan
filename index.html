@@ -1,0 +1,1261 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="theme-color" content="#0F3460">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <title>Survey Kepuasan – JP Smart SIM</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --navy:        #0F3460;
+      --blue:        #1D6FE8;
+      --blue-mid:    #2C7BF0;
+      --blue-lt:     #EBF2FF;
+      --blue-border: #BFDBFE;
+      --cyan:        #0EA5E9;
+      --green:       #059669;
+      --green-lt:    #D1FAE5;
+      --red:         #DC2626;
+      --red-lt:      #FEE2E2;
+      --amber-lt:    #FFF8E1;
+      --amber-bd:    #FDE68A;
+      --amber-tx:    #92400E;
+      --bg:          #F0F5FF;
+      --card:        #FFFFFF;
+      --text:        #1E293B;
+      --muted:       #64748B;
+      --border:      #DDE3EF;
+      --radius:      14px;
+      --shadow-sm:   0 1px 3px rgba(15,52,96,.07), 0 4px 16px rgba(15,52,96,.06);
+      --shadow-md:   0 4px 24px rgba(15,52,96,.10);
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Helvetica Neue',
+                   'Segoe UI', Roboto, Arial, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      padding-bottom: 48px;
+      -webkit-font-smoothing: antialiased;
+      -webkit-text-size-adjust: 100%;
+    }
+
+    /* ── HEADER ─────────────────────────────────── */
+    .header {
+      background: linear-gradient(150deg, #0B2A52 0%, #0F3460 45%, #1A4F98 100%);
+      color: #fff;
+      padding: 32px 20px 42px;
+      text-align: center;
+      position: relative;
+      overflow: hidden;
+    }
+    .header::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background-image: radial-gradient(circle at 20% 80%, rgba(14,165,233,.18) 0%, transparent 50%),
+                        radial-gradient(circle at 80% 20%, rgba(29,111,232,.22) 0%, transparent 50%);
+    }
+    .header-inner { position: relative; z-index: 1; }
+    .header-logo {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: rgba(255,255,255,.12);
+      border: 1px solid rgba(255,255,255,.22);
+      border-radius: 40px;
+      padding: 6px 16px;
+      font-size: 13px;
+      font-weight: 700;
+      letter-spacing: .5px;
+      margin-bottom: 16px;
+    }
+    .header-logo .dot {
+      width: 8px; height: 8px;
+      background: #38BDF8;
+      border-radius: 50%;
+      animation: pulse 2s ease-in-out infinite;
+    }
+    @keyframes pulse {
+      0%,100% { opacity: 1; transform: scale(1); }
+      50% { opacity: .5; transform: scale(.8); }
+    }
+    .header h1 {
+      font-size: 22px;
+      font-weight: 800;
+      margin-bottom: 8px;
+      letter-spacing: -.3px;
+      line-height: 1.3;
+    }
+    .header p {
+      font-size: 14px;
+      opacity: .82;
+      line-height: 1.6;
+    }
+
+    /* ── CONTAINER ───────────────────────────────── */
+    .container {
+      max-width: 600px;
+      margin: 16px auto 0;
+      padding: 0 14px;
+    }
+
+    /* ── CARD ────────────────────────────────────── */
+    .card {
+      background: var(--card);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow-sm);
+      padding: 20px;
+      margin-bottom: 14px;
+      border: 1px solid rgba(221,227,239,.6);
+    }
+    .card-title {
+      font-size: 11px;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 1.2px;
+      color: var(--blue);
+      margin-bottom: 18px;
+      padding-bottom: 12px;
+      border-bottom: 2px solid var(--blue-lt);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .card-title-icon {
+      width: 26px; height: 26px;
+      background: var(--blue-lt);
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 14px;
+      flex-shrink: 0;
+    }
+
+    /* ── FORM FIELDS ─────────────────────────────── */
+    .field { margin-bottom: 18px; }
+    .field:last-child { margin-bottom: 0; }
+
+    label {
+      display: block;
+      font-size: 13.5px;
+      font-weight: 700;
+      color: var(--text);
+      margin-bottom: 7px;
+      line-height: 1.4;
+    }
+    label .note {
+      display: block;
+      font-weight: 400;
+      font-size: 12px;
+      color: var(--muted);
+      margin-top: 2px;
+    }
+    .required-star { color: var(--red); margin-left: 2px; }
+
+    input[type="text"],
+    input[type="tel"],
+    textarea,
+    select {
+      width: 100%;
+      padding: 12px 14px;
+      border: 1.5px solid var(--border);
+      border-radius: 10px;
+      font-size: 16px; /* KRITIS: font-size 16px mencegah auto-zoom Safari iOS */
+      font-family: inherit;
+      color: var(--text);
+      background: #fff;
+      transition: border-color .2s, box-shadow .2s;
+      -webkit-appearance: none;
+      appearance: none;
+    }
+    input[type="text"]:focus,
+    input[type="tel"]:focus,
+    textarea:focus,
+    select:focus {
+      outline: none;
+      border-color: var(--blue);
+      box-shadow: 0 0 0 3px rgba(29,111,232,.14);
+    }
+    textarea {
+      resize: vertical;
+      min-height: 90px;
+      line-height: 1.6;
+    }
+    select {
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 14 14'%3E%3Cpath fill='%2364748B' d='M7 10L1.5 4h11z'/%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: right 13px center;
+      padding-right: 38px;
+      cursor: pointer;
+    }
+    input.invalid, textarea.invalid, select.invalid {
+      border-color: var(--red) !important;
+      box-shadow: 0 0 0 3px rgba(220,38,38,.10);
+    }
+    .field-error {
+      font-size: 12px;
+      color: var(--red);
+      margin-top: 5px;
+      display: none;
+      font-weight: 500;
+    }
+    .field-error.show { display: block; }
+
+    /* ── OPTION CARDS ────────────────────────────── */
+    .opts { display: flex; flex-direction: column; gap: 8px; }
+    .opt {
+      display: flex;
+      align-items: flex-start;
+      gap: 11px;
+      padding: 12px 14px;
+      border: 1.5px solid var(--border);
+      border-radius: 10px;
+      cursor: pointer;
+      transition: border-color .15s, background .15s;
+      user-select: none;
+      -webkit-user-select: none;
+      -webkit-tap-highlight-color: transparent;
+      touch-action: manipulation;
+    }
+    .opt input[type="radio"],
+    .opt input[type="checkbox"] {
+      width: 18px; height: 18px;
+      flex-shrink: 0;
+      margin-top: 1px;
+      accent-color: var(--blue);
+      cursor: pointer;
+    }
+    .opt-text {
+      font-size: 14px;
+      font-weight: 500;
+      line-height: 1.5;
+      color: var(--text);
+    }
+    .opt:has(input:checked) {
+      border-color: var(--blue);
+      background: var(--blue-lt);
+    }
+    .opt:has(input:checked) .opt-text { color: var(--navy); font-weight: 600; }
+
+    /* ── SIGNAL GRID ─────────────────────────────── */
+    .signal-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+    }
+    .signal-btn {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 6px;
+      padding: 16px 10px 14px;
+      border: 2px solid var(--border);
+      border-radius: 12px;
+      cursor: pointer;
+      text-align: center;
+      transition: all .15s;
+      user-select: none;
+      -webkit-user-select: none;
+      -webkit-tap-highlight-color: transparent;
+      touch-action: manipulation;
+      position: relative;
+    }
+    .signal-btn input {
+      position: absolute;
+      opacity: 0;
+      width: 0; height: 0;
+      pointer-events: none;
+    }
+    .signal-emoji { font-size: 28px; line-height: 1; }
+    .signal-lbl {
+      font-size: 12.5px;
+      font-weight: 700;
+      color: var(--muted);
+    }
+    /* Good signals */
+    .signal-btn.is-good {
+      border-color: var(--green);
+      background: var(--green-lt);
+    }
+    .signal-btn.is-good .signal-lbl { color: var(--green); }
+    /* Bad signals */
+    .signal-btn.is-bad {
+      border-color: var(--red);
+      background: var(--red-lt);
+    }
+    .signal-btn.is-bad .signal-lbl { color: var(--red); }
+
+    /* ── CONDITIONAL SECTIONS ────────────────────── */
+    .cond-section {
+      display: none;
+    }
+    .cond-section.show {
+      display: block;
+      animation: slideDown .3s cubic-bezier(.16,.62,.34,1);
+    }
+    @keyframes slideDown {
+      from { opacity: 0; transform: translateY(12px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    /* ── REFERRAL SUB-FIELD ──────────────────────── */
+    .sub-fields {
+      margin-top: 10px;
+      padding: 14px;
+      background: var(--bg);
+      border-radius: 10px;
+      display: none;
+      gap: 10px;
+      flex-direction: column;
+    }
+    .sub-fields.show { display: flex; }
+    .sub-fields .field { margin-bottom: 0; }
+
+    /* ── SPEEDTEST LINK ──────────────────────────── */
+    .speedtest-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: var(--blue-lt);
+      color: var(--blue);
+      text-decoration: none;
+      padding: 9px 14px;
+      border-radius: 8px;
+      font-size: 13.5px;
+      font-weight: 700;
+      margin-bottom: 12px;
+      border: 1px solid var(--blue-border);
+      -webkit-tap-highlight-color: transparent;
+      touch-action: manipulation;
+    }
+    .speedtest-btn:active { opacity: .8; }
+
+    /* ── FILE UPLOAD (Safari-safe) ───────────────── */
+    .upload-wrapper {
+      border: 2px dashed var(--border);
+      border-radius: 12px;
+      position: relative;
+      overflow: hidden;
+      transition: border-color .2s, background .2s;
+      background: #FAFBFF;
+    }
+    .upload-wrapper:active { border-color: var(--blue); }
+    .upload-tap-area {
+      padding: 24px 16px;
+      text-align: center;
+      pointer-events: none; /* file input handles clicks */
+    }
+    .upload-icon-big { font-size: 36px; margin-bottom: 8px; }
+    .upload-text-main {
+      font-size: 14px;
+      font-weight: 700;
+      color: var(--blue);
+      margin-bottom: 3px;
+    }
+    .upload-text-sub {
+      font-size: 12px;
+      color: var(--muted);
+    }
+    /* The actual file input floats absolutely over entire area */
+    .upload-input-real {
+      position: absolute;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      opacity: 0;
+      cursor: pointer;
+      /* font-size 16px prevents iOS zoom if input gets focused */
+      font-size: 16px;
+      z-index: 2;
+    }
+
+    /* File preview */
+    .file-preview {
+      display: none;
+      margin-top: 10px;
+      padding: 10px 12px;
+      background: var(--bg);
+      border-radius: 10px;
+      align-items: center;
+      gap: 10px;
+    }
+    .file-preview.show { display: flex; }
+    .file-preview-img {
+      width: 56px; height: 56px;
+      object-fit: cover;
+      border-radius: 8px;
+      border: 1px solid var(--border);
+      flex-shrink: 0;
+    }
+    .file-preview-meta { flex: 1; min-width: 0; }
+    .file-preview-name {
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--text);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .file-preview-size { font-size: 12px; color: var(--muted); margin-top: 2px; }
+    .file-remove-btn {
+      background: none;
+      border: none;
+      color: var(--red);
+      font-size: 20px;
+      cursor: pointer;
+      padding: 4px 6px;
+      line-height: 1;
+      flex-shrink: 0;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    /* ── INFO BOXES ──────────────────────────────── */
+    .info-box {
+      border-radius: 10px;
+      padding: 13px 14px;
+      font-size: 13px;
+      line-height: 1.6;
+      margin-bottom: 16px;
+    }
+    .info-box.amber {
+      background: var(--amber-lt);
+      border: 1px solid var(--amber-bd);
+      color: var(--amber-tx);
+    }
+    .info-box.blue {
+      background: var(--blue-lt);
+      border: 1px solid var(--blue-border);
+      color: var(--navy);
+    }
+
+    /* ── SUBMIT AREA ─────────────────────────────── */
+    .submit-card {
+      background: var(--card);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow-md);
+      padding: 20px;
+      margin-bottom: 14px;
+      border: 1px solid rgba(221,227,239,.6);
+    }
+    .btn-submit {
+      width: 100%;
+      padding: 16px 24px;
+      background: linear-gradient(135deg, #0F3460 0%, #1D6FE8 100%);
+      color: #fff;
+      border: none;
+      border-radius: 12px;
+      font-size: 16px;
+      font-weight: 800;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 9px;
+      transition: transform .15s, box-shadow .15s;
+      -webkit-tap-highlight-color: transparent;
+      touch-action: manipulation;
+      box-shadow: 0 4px 20px rgba(15,52,96,.30);
+      letter-spacing: .2px;
+    }
+    .btn-submit:active:not(:disabled) {
+      transform: scale(.98);
+      box-shadow: 0 2px 8px rgba(15,52,96,.2);
+    }
+    .btn-submit:disabled {
+      background: linear-gradient(135deg, #94A3B8 0%, #94A3B8 100%);
+      cursor: not-allowed;
+      box-shadow: none;
+    }
+    .spinner {
+      width: 18px; height: 18px;
+      border: 2.5px solid rgba(255,255,255,.35);
+      border-top-color: #fff;
+      border-radius: 50%;
+      animation: spin .7s linear infinite;
+      flex-shrink: 0;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    .err-global {
+      margin-top: 13px;
+      background: var(--red-lt);
+      border: 1px solid #FECACA;
+      border-radius: 10px;
+      padding: 12px 14px;
+      color: var(--red);
+      font-size: 13px;
+      font-weight: 500;
+      line-height: 1.6;
+      display: none;
+    }
+    .err-global.show { display: block; }
+
+    /* ── SUCCESS ─────────────────────────────────── */
+    .success-card {
+      background: var(--card);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow-md);
+      padding: 40px 24px;
+      margin-bottom: 14px;
+      text-align: center;
+      display: none;
+    }
+    .success-card.show { display: block; animation: slideDown .4s ease; }
+    .success-ico { font-size: 64px; margin-bottom: 16px; }
+    .success-title {
+      font-size: 20px;
+      font-weight: 800;
+      color: var(--green);
+      margin-bottom: 12px;
+    }
+    .success-body {
+      font-size: 14.5px;
+      color: var(--muted);
+      line-height: 1.75;
+    }
+    .success-badge {
+      display: inline-block;
+      margin-top: 20px;
+      background: var(--green-lt);
+      border: 1px solid #6EE7B7;
+      color: var(--green);
+      border-radius: 40px;
+      padding: 6px 18px;
+      font-size: 13px;
+      font-weight: 700;
+    }
+
+    /* ── FOOTER ──────────────────────────────────── */
+    .footer {
+      text-align: center;
+      font-size: 12px;
+      color: var(--muted);
+      padding: 16px 20px 0;
+    }
+
+    /* ── PROGRESS BAR ────────────────────────────── */
+    .progress-bar {
+      height: 4px;
+      background: rgba(255,255,255,.2);
+      position: absolute;
+      bottom: 0; left: 0; right: 0;
+    }
+    .progress-fill {
+      height: 100%;
+      background: #38BDF8;
+      border-radius: 0 2px 2px 0;
+      transition: width .4s ease;
+      width: 25%;
+    }
+
+    @media (max-width: 380px) {
+      .header h1 { font-size: 19px; }
+      .card { padding: 16px; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- HEADER -->
+<div class="header">
+  <div class="header-inner">
+    <div class="header-logo">
+      <div class="dot"></div>
+      JP SMART SIM
+    </div>
+    <h1>Survey Kepuasan &amp; Keluhan</h1>
+    <p>Bantu kami hadir lebih baik untuk Kakak di Jepang 🗾</p>
+  </div>
+  <div class="progress-bar">
+    <div class="progress-fill" id="progressFill"></div>
+  </div>
+</div>
+
+<div class="container">
+
+  <!-- ====== FORM ====== -->
+  <form id="mainForm" novalidate autocomplete="on">
+
+    <!-- BAGIAN 1: INFO DASAR -->
+    <div class="card">
+      <div class="card-title">
+        <div class="card-title-icon">📋</div>
+        Bagian 1 – Informasi Dasar
+      </div>
+
+      <div class="field">
+        <label for="f_nama">
+          Nama Lengkap <span class="required-star">*</span>
+        </label>
+        <input type="text" id="f_nama" autocomplete="name"
+               placeholder="Masukkan nama lengkap Kakak">
+        <div class="field-error" id="err_nama">⚠️ Nama wajib diisi.</div>
+      </div>
+
+      <div class="field">
+        <label for="f_wa">
+          No. WhatsApp (Aktif) <span class="required-star">*</span>
+          <span class="note">Nomor yang bisa kami hubungi</span>
+        </label>
+        <input type="tel" id="f_wa" autocomplete="tel"
+               placeholder="Contoh: +62812xxxxxxxx atau +81 80-xxxx-xxxx">
+        <div class="field-error" id="err_wa">⚠️ Nomor WhatsApp wajib diisi.</div>
+      </div>
+
+      <div class="field">
+        <label for="f_lama">
+          Sudah berapa lama menggunakan JP Smart SIM? <span class="required-star">*</span>
+        </label>
+        <select id="f_lama">
+          <option value="">— Pilih durasi —</option>
+          <option value="< 1 bulan">Kurang dari 1 bulan</option>
+          <option value="1–3 bulan">1–3 bulan</option>
+          <option value="3–6 bulan">3–6 bulan</option>
+          <option value="> 6 bulan">Lebih dari 6 bulan</option>
+        </select>
+        <div class="field-error" id="err_lama">⚠️ Pilih durasi penggunaan.</div>
+      </div>
+
+      <div class="field">
+        <label for="f_domisili">
+          Domisili / Wilayah di Jepang <span class="required-star">*</span>
+          <span class="note">Prefektur atau nama kota</span>
+        </label>
+        <input type="text" id="f_domisili"
+               placeholder="Contoh: Tokyo, Osaka, Nagoya, Fukuoka…">
+        <div class="field-error" id="err_domisili">⚠️ Domisili wajib diisi.</div>
+      </div>
+    </div>
+
+    <!-- BAGIAN 2: PENILAIAN SINYAL -->
+    <div class="card">
+      <div class="card-title">
+        <div class="card-title-icon">📶</div>
+        Bagian 2 – Penilaian Sinyal
+      </div>
+
+      <div class="field">
+        <label>
+          Secara keseluruhan, bagaimana kualitas sinyal JP Smart SIM yang Kakak rasakan?
+          <span class="required-star">*</span>
+        </label>
+        <div class="signal-grid">
+          <label class="signal-btn" id="sb_1">
+            <input type="radio" name="sinyal" value="Sangat Bagus">
+            <div class="signal-emoji">😄</div>
+            <div class="signal-lbl">Sangat Bagus</div>
+          </label>
+          <label class="signal-btn" id="sb_2">
+            <input type="radio" name="sinyal" value="Bagus">
+            <div class="signal-emoji">🙂</div>
+            <div class="signal-lbl">Bagus</div>
+          </label>
+          <label class="signal-btn" id="sb_3">
+            <input type="radio" name="sinyal" value="Kurang Bagus">
+            <div class="signal-emoji">😕</div>
+            <div class="signal-lbl">Kurang Bagus</div>
+          </label>
+          <label class="signal-btn" id="sb_4">
+            <input type="radio" name="sinyal" value="Sangat Jelek">
+            <div class="signal-emoji">😞</div>
+            <div class="signal-lbl">Sangat Jelek</div>
+          </label>
+        </div>
+        <div class="field-error" id="err_sinyal">⚠️ Pilih salah satu penilaian sinyal.</div>
+      </div>
+    </div>
+
+    <!-- BAGIAN 3A: SINYAL BAGUS (kondisional) -->
+    <div class="cond-section" id="sec3a">
+      <div class="card">
+        <div class="card-title">
+          <div class="card-title-icon">🌟</div>
+          Bagian 3A – Informasi Tambahan
+        </div>
+
+        <div class="info-box blue">
+          Senang mendengar Kakak puas! Kami ingin menjaga kepuasan ini dan berkembang bersama. 😊
+        </div>
+
+        <div class="field">
+          <label>
+            Apakah Kakak tertarik mengaktifkan fitur <strong>Pembayaran Autodebet</strong>?
+            <span class="note">Tidak perlu ke Kombini setiap bulan</span>
+          </label>
+          <div class="opts">
+            <label class="opt">
+              <input type="radio" name="autodebet" value="Ya, hubungi saya">
+              <span class="opt-text">✅ Ya, hubungi saya dengan info lebih lanjut</span>
+            </label>
+            <label class="opt">
+              <input type="radio" name="autodebet" value="Tidak untuk saat ini">
+              <span class="opt-text">❌ Tidak untuk saat ini</span>
+            </label>
+          </div>
+        </div>
+
+        <div class="field">
+          <label>
+            Adakah kenalan / teman yang sedang mencari SIM Card Jepang?
+            <span class="note">💰 Dapatkan diskon/cashback spesial jika teman Kakak mendaftar!</span>
+          </label>
+          <div class="opts">
+            <label class="opt">
+              <input type="radio" name="adaReferral" value="Ada" id="r_ada">
+              <span class="opt-text">👥 Ada (isi nama &amp; WA teman di bawah)</span>
+            </label>
+            <label class="opt">
+              <input type="radio" name="adaReferral" value="Belum ada" id="r_belum">
+              <span class="opt-text">🤷 Belum ada</span>
+            </label>
+          </div>
+          <div class="sub-fields" id="refDetail">
+            <div class="field">
+              <label for="f_namaRef" style="font-size:13px;">Nama Teman</label>
+              <input type="text" id="f_namaRef" placeholder="Nama lengkap teman">
+            </div>
+            <div class="field">
+              <label for="f_waRef" style="font-size:13px;">No. WhatsApp Teman</label>
+              <input type="tel" id="f_waRef" placeholder="+62812xxxxxxxx">
+            </div>
+          </div>
+        </div>
+
+        <div class="field">
+          <label for="f_saran">
+            Saran untuk kami <em style="font-weight:400; font-size:12px; color:var(--muted);">(Opsional)</em>
+          </label>
+          <textarea id="f_saran"
+                    placeholder="Tuliskan saran Kakak agar kami bisa melayani lebih baik ke depannya…"></textarea>
+        </div>
+      </div>
+    </div>
+
+    <!-- BAGIAN 3B: SINYAL JELEK (kondisional) -->
+    <div class="cond-section" id="sec3b">
+      <div class="card">
+        <div class="card-title">
+          <div class="card-title-icon">🔧</div>
+          Bagian 3B – Detail Kendala Sinyal
+        </div>
+
+        <div class="info-box amber">
+          ⚠️ Maaf atas ketidaknyamanannya, Kakak. Tim teknis kami akan segera menginvestigasi. Mohon bantu isi detail di bawah ini ya.
+        </div>
+
+        <div class="field">
+          <label for="f_sejak">
+            Sejak kapan Kakak mulai merasakan kendala sinyal ini? <span class="required-star">*</span>
+          </label>
+          <input type="text" id="f_sejak"
+                 placeholder="Contoh: Sejak 2 minggu lalu, sejak pindah ke Osaka…">
+          <div class="field-error" id="err_sejak">⚠️ Informasi ini wajib diisi.</div>
+        </div>
+
+        <div class="field">
+          <label>
+            Dimana kendala ini paling sering terjadi? <span class="required-star">*</span>
+          </label>
+          <div class="opts">
+            <label class="opt">
+              <input type="radio" name="lokasiKendala" value="Di dalam ruangan (Indoor)">
+              <span class="opt-text">🏠 Di dalam ruangan (Indoor)</span>
+            </label>
+            <label class="opt">
+              <input type="radio" name="lokasiKendala" value="Di luar ruangan (Outdoor)">
+              <span class="opt-text">🌤️ Di luar ruangan (Outdoor)</span>
+            </label>
+          </div>
+          <div class="field-error" id="err_lokasi">⚠️ Pilih lokasi kendala.</div>
+        </div>
+
+        <div class="field">
+          <label for="f_kondisi">
+            Bagaimana kondisi area tempat tinggal Kakak? <span class="required-star">*</span>
+          </label>
+          <select id="f_kondisi">
+            <option value="">— Pilih kondisi area —</option>
+            <option value="Perkotaan">🏙️ Perkotaan</option>
+            <option value="Pegunungan">⛰️ Pegunungan</option>
+            <option value="Pesisir Pantai">🌊 Pesisir Pantai</option>
+            <option value="Lainnya">🌐 Lainnya</option>
+          </select>
+          <div class="field-error" id="err_kondisi">⚠️ Pilih kondisi area.</div>
+        </div>
+
+        <div class="field">
+          <label for="f_jam">
+            Pada jam berapa / saat aktivitas apa kendala paling terasa? <span class="required-star">*</span>
+            <span class="note">Contoh: Malam jam 8, saat Video Call atau nonton YouTube</span>
+          </label>
+          <input type="text" id="f_jam"
+                 placeholder="Contoh: Malam jam 8, saat Video Call / YouTube">
+          <div class="field-error" id="err_jam">⚠️ Informasi ini wajib diisi.</div>
+        </div>
+
+        <div class="field">
+          <label for="f_hp">
+            Merk dan Tipe HP yang digunakan <span class="required-star">*</span>
+            <span class="note">Contoh: iPhone 13, Samsung Galaxy S22</span>
+          </label>
+          <input type="text" id="f_hp"
+                 placeholder="Contoh: iPhone 15, Samsung S24 Ultra…">
+          <div class="field-error" id="err_hp">⚠️ Informasi ini wajib diisi.</div>
+        </div>
+
+        <div class="field">
+          <label>
+            Upload Screenshot Speedtest
+            <em style="font-weight:400; font-size:12px; color:var(--muted);">(Opsional — sangat membantu tim teknis!)</em>
+          </label>
+          <a href="https://www.speedtest.net" target="_blank" rel="noopener noreferrer"
+             class="speedtest-btn">
+            ⚡ Buka Speedtest di sini
+          </a>
+          <div class="upload-wrapper" id="uploadWrapper">
+            <!--
+              SAFARI FIX:
+              - accept="image/*" tanpa capture agar album foto terbuka (bukan kamera langsung)
+              - font-size 16px pada input mencegah auto-zoom Safari iOS
+              - Input diposisikan absolut di atas area klik
+            -->
+            <input type="file"
+                   class="upload-input-real"
+                   id="f_file"
+                   accept="image/*"
+                   aria-label="Upload foto speedtest">
+            <div class="upload-tap-area">
+              <div class="upload-icon-big">📸</div>
+              <div class="upload-text-main">Ketuk untuk pilih foto</div>
+              <div class="upload-text-sub">JPG, PNG, HEIC · Maks. 5 MB</div>
+            </div>
+          </div>
+          <div class="file-preview" id="filePreview">
+            <img class="file-preview-img" id="prevImg" src="" alt="Preview">
+            <div class="file-preview-meta">
+              <div class="file-preview-name" id="prevName"></div>
+              <div class="file-preview-size" id="prevSize"></div>
+            </div>
+            <button type="button" class="file-remove-btn" id="btnRemove" aria-label="Hapus foto">✕</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- TOMBOL SUBMIT -->
+    <div class="submit-card" id="submitArea">
+      <button type="submit" class="btn-submit" id="btnSubmit">
+        <span id="btnLabel">✉️ Kirim Survey Sekarang</span>
+      </button>
+      <div class="err-global" id="errGlobal"></div>
+    </div>
+
+  </form>
+
+  <!-- SUCCESS STATE -->
+  <div class="success-card" id="successCard">
+    <div class="success-ico">🎉</div>
+    <div class="success-title">Survey Berhasil Terkirim!</div>
+    <div class="success-body">
+      Terima kasih atas waktu dan masukannya, Kakak! 🙏<br><br>
+      Kami akan terus mengevaluasi data ini untuk memastikan
+      pengalaman internet Kakak menjadi lebih stabil dan
+      nyaman setiap harinya. ✨
+    </div>
+    <div class="success-badge">📡 JP Smart SIM · Selalu hadir untuk Kakak</div>
+  </div>
+
+  <div class="footer">
+    © 2025 JP Smart SIM &nbsp;·&nbsp; Survey ini aman &amp; rahasia
+  </div>
+</div>
+
+<!-- ============================================================
+     JAVASCRIPT
+     ============================================================ -->
+<script>
+'use strict';
+
+// ─────────────────────────────────────────────────────────────
+// !! WAJIB DIUBAH: Ganti dengan URL GAS yang sudah di-deploy !!
+// ─────────────────────────────────────────────────────────────
+const GAS_URL = 'https://script.google.com/macros/s/AKfycbxoQCDlf4uQ59zjeIm1M-NAjHDH1DrI2VUabvZ_XA3Kf00XKNElKqHUm9_esGKg2fO1/exec';
+
+// ─────────────────────────────────────────────────────────────
+// STATE FILE UPLOAD
+// ─────────────────────────────────────────────────────────────
+let uploadedB64   = null;
+let uploadedName  = null;
+let uploadedMime  = null;
+
+// ─────────────────────────────────────────────────────────────
+// HELPER: ambil nilai radio
+// ─────────────────────────────────────────────────────────────
+function radioVal(name) {
+  const el = document.querySelector(`input[name="${name}"]:checked`);
+  return el ? el.value : '';
+}
+
+// ─────────────────────────────────────────────────────────────
+// HELPER: tampilkan / sembunyikan field error
+// ─────────────────────────────────────────────────────────────
+function showFieldErr(errId, inputEl) {
+  const errEl = document.getElementById(errId);
+  if (errEl) errEl.classList.add('show');
+  if (inputEl) inputEl.classList.add('invalid');
+}
+function clearFieldErr(errId, inputEl) {
+  const errEl = document.getElementById(errId);
+  if (errEl) errEl.classList.remove('show');
+  if (inputEl) inputEl.classList.remove('invalid');
+}
+
+// ─────────────────────────────────────────────────────────────
+// CONDITIONAL SECTIONS — sinyal radio logic
+// ─────────────────────────────────────────────────────────────
+const sec3a = document.getElementById('sec3a');
+const sec3b = document.getElementById('sec3b');
+const signalBtns = document.querySelectorAll('.signal-btn');
+
+document.querySelectorAll('input[name="sinyal"]').forEach(radio => {
+  radio.addEventListener('change', function () {
+    const val = this.value;
+
+    // Reset semua visual signal-btn
+    signalBtns.forEach(btn => btn.classList.remove('is-good', 'is-bad'));
+
+    const parentBtn = this.closest('.signal-btn');
+    if (val === 'Sangat Bagus' || val === 'Bagus') {
+      parentBtn.classList.add('is-good');
+      sec3a.classList.add('show');
+      sec3b.classList.remove('show');
+      resetSection3b();
+    } else {
+      parentBtn.classList.add('is-bad');
+      sec3b.classList.add('show');
+      sec3a.classList.remove('show');
+      resetSection3a();
+    }
+
+    clearFieldErr('err_sinyal');
+    updateProgress();
+
+    // Scroll ke section berikutnya
+    setTimeout(() => {
+      const target = (val === 'Sangat Bagus' || val === 'Bagus') ? sec3a : sec3b;
+      target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }, 150);
+  });
+});
+
+function resetSection3a() {
+  document.querySelectorAll('input[name="autodebet"]').forEach(r => r.checked = false);
+  document.querySelectorAll('input[name="adaReferral"]').forEach(r => r.checked = false);
+  document.getElementById('refDetail').classList.remove('show');
+  document.getElementById('f_namaRef').value = '';
+  document.getElementById('f_waRef').value = '';
+  document.getElementById('f_saran').value = '';
+}
+function resetSection3b() {
+  document.getElementById('f_sejak').value = '';
+  document.querySelectorAll('input[name="lokasiKendala"]').forEach(r => r.checked = false);
+  document.getElementById('f_kondisi').value = '';
+  document.getElementById('f_jam').value = '';
+  document.getElementById('f_hp').value = '';
+  removeFile();
+  ['err_sejak','err_lokasi','err_kondisi','err_jam','err_hp'].forEach(id => {
+    const el = document.getElementById(id); if (el) el.classList.remove('show');
+  });
+}
+
+// ─────────────────────────────────────────────────────────────
+// REFERRAL TOGGLE
+// ─────────────────────────────────────────────────────────────
+document.getElementById('r_ada').addEventListener('change', function () {
+  document.getElementById('refDetail').classList.add('show');
+});
+document.getElementById('r_belum').addEventListener('change', function () {
+  document.getElementById('refDetail').classList.remove('show');
+  document.getElementById('f_namaRef').value = '';
+  document.getElementById('f_waRef').value = '';
+});
+
+// ─────────────────────────────────────────────────────────────
+// FILE UPLOAD — Safari-safe: gunakan FileReader → base64
+// ─────────────────────────────────────────────────────────────
+const fileInput  = document.getElementById('f_file');
+const filePreview = document.getElementById('filePreview');
+const prevImg    = document.getElementById('prevImg');
+const prevName   = document.getElementById('prevName');
+const prevSize   = document.getElementById('prevSize');
+
+fileInput.addEventListener('change', handleFileChange);
+
+function handleFileChange() {
+  const file = this.files && this.files[0];
+  if (!file) return;
+
+  // Validasi ukuran (5 MB)
+  if (file.size > 5 * 1024 * 1024) {
+    showGlobalErr('❌ Ukuran file terlalu besar. Maksimal 5 MB.');
+    this.value = '';
+    return;
+  }
+
+  // Validasi tipe
+  if (!file.type.startsWith('image/')) {
+    showGlobalErr('❌ File harus berupa gambar (JPG, PNG, HEIC).');
+    this.value = '';
+    return;
+  }
+
+  clearGlobalErr();
+
+  // Gunakan FileReader — cara paling aman di Safari iOS
+  const reader = new FileReader();
+  reader.onload = function (e) {
+    const dataUrl = e.target.result;
+    const parts   = dataUrl.split(',');
+    // parts[0] = "data:image/jpeg;base64", parts[1] = base64 string
+    const mimeFromHeader = parts[0].split(':')[1].split(';')[0];
+
+    uploadedB64  = parts[1];
+    uploadedName = file.name;
+    uploadedMime = mimeFromHeader || file.type || 'image/jpeg';
+
+    // Tampilkan preview
+    prevImg.src = dataUrl;
+    prevName.textContent = file.name;
+    prevSize.textContent = fmtSize(file.size);
+    filePreview.classList.add('show');
+  };
+  reader.onerror = function () {
+    showGlobalErr('❌ Gagal membaca file. Coba pilih file lain.');
+    removeFile();
+  };
+  reader.readAsDataURL(file);
+}
+
+document.getElementById('btnRemove').addEventListener('click', removeFile);
+
+function removeFile() {
+  fileInput.value = '';
+  uploadedB64  = null;
+  uploadedName = null;
+  uploadedMime = null;
+  prevImg.src  = '';
+  filePreview.classList.remove('show');
+}
+
+function fmtSize(bytes) {
+  if (bytes < 1024) return bytes + ' B';
+  if (bytes < 1048576) return (bytes / 1024).toFixed(1) + ' KB';
+  return (bytes / 1048576).toFixed(1) + ' MB';
+}
+
+// ─────────────────────────────────────────────────────────────
+// PROGRESS BAR (estimasi kasar berdasarkan isian)
+// ─────────────────────────────────────────────────────────────
+function updateProgress() {
+  const nama   = document.getElementById('f_nama').value.trim();
+  const wa     = document.getElementById('f_wa').value.trim();
+  const lama   = document.getElementById('f_lama').value;
+  const dom    = document.getElementById('f_domisili').value.trim();
+  const sinyal = radioVal('sinyal');
+
+  let filled = 0;
+  if (nama)   filled++;
+  if (wa)     filled++;
+  if (lama)   filled++;
+  if (dom)    filled++;
+  if (sinyal) filled += 2;
+
+  const pct = Math.min(100, Math.round((filled / 6) * 100));
+  document.getElementById('progressFill').style.width = pct + '%';
+}
+
+['f_nama','f_wa','f_lama','f_domisili'].forEach(id => {
+  const el = document.getElementById(id);
+  if (el) el.addEventListener('input', updateProgress);
+});
+
+// ─────────────────────────────────────────────────────────────
+// CLEAR VALIDATION ON INPUT
+// ─────────────────────────────────────────────────────────────
+const mappings = {
+  f_nama:     'err_nama',
+  f_wa:       'err_wa',
+  f_lama:     'err_lama',
+  f_domisili: 'err_domisili',
+  f_sejak:    'err_sejak',
+  f_kondisi:  'err_kondisi',
+  f_jam:      'err_jam',
+  f_hp:       'err_hp',
+};
+Object.entries(mappings).forEach(([inputId, errId]) => {
+  const el = document.getElementById(inputId);
+  if (el) el.addEventListener('input', () => clearFieldErr(errId, el));
+});
+
+// ─────────────────────────────────────────────────────────────
+// VALIDASI FORM
+// ─────────────────────────────────────────────────────────────
+function validateForm() {
+  let ok = true;
+
+  function chk(inputId, errId, cond) {
+    const el = document.getElementById(inputId);
+    if (cond) { showFieldErr(errId, el); ok = false; }
+    else       { clearFieldErr(errId, el); }
+  }
+
+  // Bagian 1
+  chk('f_nama',     'err_nama',    !document.getElementById('f_nama').value.trim());
+  chk('f_wa',       'err_wa',      !document.getElementById('f_wa').value.trim());
+  chk('f_lama',     'err_lama',    !document.getElementById('f_lama').value);
+  chk('f_domisili', 'err_domisili',!document.getElementById('f_domisili').value.trim());
+
+  // Bagian 2
+  const sinyal = radioVal('sinyal');
+  const errSinyal = document.getElementById('err_sinyal');
+  if (!sinyal) { errSinyal.classList.add('show'); ok = false; }
+  else          { errSinyal.classList.remove('show'); }
+
+  // Bagian 3B (hanya jika sinyal jelek)
+  if (sinyal === 'Kurang Bagus' || sinyal === 'Sangat Jelek') {
+    chk('f_sejak',   'err_sejak',  !document.getElementById('f_sejak').value.trim());
+    chk('f_kondisi', 'err_kondisi',!document.getElementById('f_kondisi').value);
+    chk('f_jam',     'err_jam',    !document.getElementById('f_jam').value.trim());
+    chk('f_hp',      'err_hp',     !document.getElementById('f_hp').value.trim());
+
+    const lokasi = radioVal('lokasiKendala');
+    const errLok = document.getElementById('err_lokasi');
+    if (!lokasi) { errLok.classList.add('show'); ok = false; }
+    else          { errLok.classList.remove('show'); }
+  }
+
+  return ok;
+}
+
+// ─────────────────────────────────────────────────────────────
+// GLOBAL ERROR MESSAGE
+// ─────────────────────────────────────────────────────────────
+function showGlobalErr(msg) {
+  const el = document.getElementById('errGlobal');
+  el.textContent = msg;
+  el.classList.add('show');
+}
+function clearGlobalErr() {
+  document.getElementById('errGlobal').classList.remove('show');
+}
+
+// ─────────────────────────────────────────────────────────────
+// SUBMIT HANDLER
+// ─────────────────────────────────────────────────────────────
+document.getElementById('mainForm').addEventListener('submit', async function (e) {
+  e.preventDefault();
+  clearGlobalErr();
+
+  if (!validateForm()) {
+    // Scroll ke error pertama
+    const first = document.querySelector('.field-error.show, .err-global.show');
+    if (first) first.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    return;
+  }
+
+  const sinyal = radioVal('sinyal');
+
+  // Bangun payload
+  const payload = {
+    // Bagian 1
+    nama:        document.getElementById('f_nama').value.trim(),
+    whatsapp:    document.getElementById('f_wa').value.trim(),
+    lamaUse:     document.getElementById('f_lama').value,
+    domisili:    document.getElementById('f_domisili').value.trim(),
+    // Bagian 2
+    sinyal:      sinyal,
+    // Bagian 3A
+    autodebet:   radioVal('autodebet'),
+    adaReferral: radioVal('adaReferral'),
+    namaReferral: document.getElementById('f_namaRef').value.trim(),
+    waReferral:  document.getElementById('f_waRef').value.trim(),
+    saran:       document.getElementById('f_saran').value.trim(),
+    // Bagian 3B
+    sejakkendala:  document.getElementById('f_sejak').value.trim(),
+    lokasiKendala: radioVal('lokasiKendala'),
+    kondisiArea:   document.getElementById('f_kondisi').value,
+    jamAktivitas:  document.getElementById('f_jam').value.trim(),
+    merkHP:        document.getElementById('f_hp').value.trim(),
+  };
+
+  // Lampirkan file (base64) jika ada
+  if (uploadedB64) {
+    payload.imageBase64 = uploadedB64;
+    payload.imageName   = uploadedName;
+    payload.imageType   = uploadedMime;
+  }
+
+  // Loading state
+  const btn      = document.getElementById('btnSubmit');
+  const btnLabel = document.getElementById('btnLabel');
+  btn.disabled   = true;
+  btnLabel.innerHTML = '<div class="spinner"></div> Mengirim…';
+
+  try {
+    /*
+     * ANTI-CORS TRICK:
+     * Gunakan Content-Type: text/plain (bukan application/json)
+     * → browser tidak kirim preflight OPTIONS request
+     * → GAS menerima request langsung & response-nya bisa dibaca
+     *
+     * Di sisi GAS, body dibaca via e.postData.contents lalu JSON.parse()
+     */
+    const resp = await fetch(GAS_URL, {
+      method:  'POST',
+      headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+      body:    JSON.stringify(payload),
+    });
+
+    let result;
+    try {
+      result = await resp.json();
+    } catch (_) {
+      // Jika response tidak bisa di-parse (misal redirect HTML),
+      // anggap berhasil — data biasanya sudah masuk
+      result = { success: true };
+    }
+
+    if (result.success) {
+      document.getElementById('mainForm').style.display = 'none';
+      document.getElementById('submitArea').style.display = 'none';
+      document.getElementById('successCard').classList.add('show');
+      document.getElementById('progressFill').style.width = '100%';
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    } else {
+      throw new Error(result.message || 'Respons server tidak dikenal.');
+    }
+
+  } catch (err) {
+    let msg = '❌ Gagal mengirim survey. ';
+    if (!navigator.onLine) {
+      msg += 'Tidak ada koneksi internet. Sambungkan dulu lalu coba lagi.';
+    } else if (err.message && err.message.toLowerCase().includes('failed to fetch')) {
+      msg += 'Koneksi bermasalah. Pastikan GAS_URL sudah benar dan coba lagi.';
+    } else {
+      msg += err.message;
+    }
+    showGlobalErr(msg);
+    btn.disabled  = false;
+    btnLabel.innerHTML = '✉️ Kirim Survey Sekarang';
+    document.getElementById('errGlobal').scrollIntoView({ behavior: 'smooth', block: 'center' });
+  }
+});
+</script>
+</body>
+</html>
