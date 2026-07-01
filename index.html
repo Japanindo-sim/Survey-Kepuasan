@@ -623,6 +623,19 @@
       </div>
 
       <div class="field">
+        <label for="f_paket">
+          Paket apa yang kamu gunakan saat ini? <span class="required-star">*</span>
+        </label>
+        <select id="f_paket">
+          <option value="">— Pilih paket —</option>
+          <option value="Paket 3GB/Bulan">Paket 3GB/Bulan</option>
+          <option value="Paket 20GB/Bulan">Paket 20GB/Bulan</option>
+          <option value="Paket MAX (3GB / Hari)">Paket MAX (3GB / Hari)</option>
+        </select>
+        <div class="field-error" id="err_paket">⚠️ Pilih paket yang kamu gunakan.</div>
+      </div>
+
+      <div class="field">
         <label for="f_domisili">
           Alamat Lengkap Domisili di Jepang <span class="required-star">*</span>
           <span class="note">Nomor, Prefektur dan Nama Kota</span>
@@ -1066,6 +1079,7 @@ function updateProgress() {
   const nama   = document.getElementById('f_nama').value.trim();
   const wa     = document.getElementById('f_wa').value.trim();
   const lama   = document.getElementById('f_lama').value;
+  const paket  = document.getElementById('f_paket').value;
   const dom    = document.getElementById('f_domisili').value.trim();
   const sinyal = radioVal('sinyal');
 
@@ -1073,14 +1087,15 @@ function updateProgress() {
   if (nama)   filled++;
   if (wa)     filled++;
   if (lama)   filled++;
+  if (paket)  filled++;
   if (dom)    filled++;
   if (sinyal) filled += 2;
 
-  const pct = Math.min(100, Math.round((filled / 6) * 100));
+  const pct = Math.min(100, Math.round((filled / 7) * 100));
   document.getElementById('progressFill').style.width = pct + '%';
 }
 
-['f_nama','f_wa','f_lama','f_domisili'].forEach(id => {
+['f_nama','f_wa','f_lama','f_paket','f_domisili'].forEach(id => {
   const el = document.getElementById(id);
   if (el) el.addEventListener('input', updateProgress);
 });
@@ -1092,6 +1107,7 @@ const mappings = {
   f_nama:     'err_nama',
   f_wa:       'err_wa',
   f_lama:     'err_lama',
+  f_paket:    'err_paket',
   f_domisili: 'err_domisili',
   f_sejak:    'err_sejak',
   f_kondisi:  'err_kondisi',
@@ -1119,6 +1135,7 @@ function validateForm() {
   chk('f_nama',     'err_nama',    !document.getElementById('f_nama').value.trim());
   chk('f_wa',       'err_wa',      !document.getElementById('f_wa').value.trim());
   chk('f_lama',     'err_lama',    !document.getElementById('f_lama').value);
+  chk('f_paket',    'err_paket',   !document.getElementById('f_paket').value);
   chk('f_domisili', 'err_domisili',!document.getElementById('f_domisili').value.trim());
 
   // Bagian 2
@@ -1177,6 +1194,7 @@ document.getElementById('mainForm').addEventListener('submit', async function (e
     nama:        document.getElementById('f_nama').value.trim(),
     whatsapp:    document.getElementById('f_wa').value.trim(),
     lamaUse:     document.getElementById('f_lama').value,
+    paket:       document.getElementById('f_paket').value,
     domisili:    document.getElementById('f_domisili').value.trim(),
     // Bagian 2
     sinyal:      sinyal,
