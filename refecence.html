@@ -1,0 +1,585 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Create New Project</title>
+  
+  <!-- Google Fonts: Inter -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Inter', '-apple-system', 'BlinkMacSystemFont', 'sans-serif'],
+          },
+          boxShadow: {
+            'modal': '0 20px 50px -12px rgba(15, 23, 42, 0.08), 0 4px 16px -4px rgba(15, 23, 42, 0.04)',
+            'chip': '0 1px 2px 0 rgba(0, 0, 0, 0.04)',
+          }
+        }
+      }
+    }
+  </script>
+
+  <style>
+    /* Subtle background grid pattern matching the reference */
+    body {
+      background-color: #FAFAFA;
+      background-image: 
+        linear-gradient(to right, #EFEFEF 1px, transparent 1px),
+        linear-gradient(to bottom, #EFEFEF 1px, transparent 1px);
+      background-size: 96px 96px;
+      background-position: center center;
+    }
+
+    /* Entrance & Micro-interaction Animations */
+    @keyframes modalEnter {
+      0% { opacity: 0; transform: translateY(14px) scale(0.985); }
+      100% { opacity: 1; transform: translateY(0) scale(1); }
+    }
+
+    @keyframes chipPopIn {
+      0% { opacity: 0; transform: scale(0.85); }
+      70% { transform: scale(1.03); }
+      100% { opacity: 1; transform: scale(1); }
+    }
+
+    @keyframes chipShrinkOut {
+      0% { opacity: 1; transform: scale(1); }
+      100% { opacity: 0; transform: scale(0.8); }
+    }
+
+    @keyframes shakeError {
+      0%, 100% { transform: translateX(0); }
+      20%, 60% { transform: translateX(-4px); }
+      40%, 80% { transform: translateX(4px); }
+    }
+
+    .animate-modal {
+      animation: modalEnter 0.45s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    }
+
+    .chip-enter {
+      animation: chipPopIn 0.22s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    }
+
+    .chip-exit {
+      animation: chipShrinkOut 0.16s ease-in forwards;
+    }
+
+    .animate-shake {
+      animation: shakeError 0.35s ease-in-out;
+    }
+
+    /* Custom Checkbox Animation */
+    .custom-checkbox input:checked + div {
+      background-color: #4F7DF3;
+      border-color: #4F7DF3;
+    }
+    .custom-checkbox input:checked + div svg {
+      transform: scale(1);
+      opacity: 1;
+    }
+    .custom-checkbox input:focus-visible + div {
+      box-shadow: 0 0 0 3px rgba(79, 125, 243, 0.25);
+    }
+
+    /* Hide native calendar icon so custom SVG handles interaction */
+    input[type="date"]::-webkit-calendar-picker-indicator {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      opacity: 0;
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body class="min-h-screen flex items-center justify-center p-4 sm:p-6 text-gray-900 antialiased selection:bg-blue-500 selection:text-white">
+
+  <!-- Toast Notification (Feedback UX) -->
+  <div id="toast" class="fixed top-6 right-6 z-50 flex items-center gap-3 bg-gray-900 text-white px-4 py-3 rounded-xl shadow-lg border border-gray-800 transform -translate-y-20 opacity-0 transition-all duration-300 pointer-events-none">
+    <svg id="toast-icon" class="w-5 h-5 text-emerald-400 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+      <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
+    </svg>
+    <span id="toast-message" class="text-sm font-medium">Project created successfully!</span>
+  </div>
+
+  <!-- Main Card Modal -->
+  <main id="modal-card" class="w-full max-w-[500px] bg-white rounded-[22px] border border-gray-200/90 shadow-modal p-6 sm:p-8 animate-modal">
+    
+    <!-- Header -->
+    <header class="mb-6">
+      <div class="flex items-center gap-2.5 mb-1.5">
+        <!-- Folder Plus Icon matching reference -->
+        <svg class="w-[22px] h-[22px] text-gray-900 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M4 20h16a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.93a2 2 0 0 1-1.66-.9l-.82-1.2A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13c0 1.1.9 2 2 2Z"/>
+          <circle cx="15" cy="14" r="4" class="fill-white"/>
+          <path d="M15 12v4"/>
+          <path d="M13 14h4"/>
+        </svg>
+        <h1 class="text-[19px] font-bold tracking-tight text-gray-900">Create New Project</h1>
+      </div>
+      <p class="text-[13.5px] text-gray-500 font-normal">Set up a new project to start organizing your team's work.</p>
+    </header>
+
+    <form id="project-form" novalidate class="space-y-5">
+      
+      <!-- Drag and Drop Upload Zone -->
+      <div>
+        <div id="dropzone" tabindex="0" role="button" aria-label="Upload project file"
+          class="group relative border-[1.5px] border-dashed border-gray-200 hover:border-gray-400 focus:border-blue-500 focus:outline-none rounded-xl p-6 text-center transition-all duration-200 bg-white hover:bg-gray-50/60 cursor-pointer">
+          <input type="file" id="file-input" class="hidden" accept=".jpg,.jpeg,.png,.pdf" />
+          
+          <!-- Default Upload Prompt -->
+          <div id="upload-prompt" class="space-y-1.5 transition-opacity duration-200">
+            <div class="mx-auto w-9 h-9 flex items-center justify-center rounded-full text-gray-500 group-hover:text-gray-800 group-hover:-translate-y-0.5 transition-all duration-200">
+              <svg class="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M4 14.899A7 7 0 1 1 15.71 8h1.79a4.5 4.5 0 0 1 2.5 8.242"/>
+                <path d="M12 12v9"/>
+                <path d="m16 16-4-4-4 4"/>
+              </svg>
+            </div>
+            <p class="text-[13.5px] font-medium text-gray-800">
+              Select a file or drag and drop here
+            </p>
+            <p class="text-[12px] text-gray-400">
+              JPG, PNG or PDF, file size no more than 10MB
+            </p>
+          </div>
+
+          <!-- Selected File Preview State (Hidden initially) -->
+          <div id="file-preview" class="hidden items-center justify-between bg-gray-50 border border-gray-200/80 rounded-lg px-3.5 py-2.5 text-left">
+            <div class="flex items-center gap-3 min-w-0">
+              <div class="w-8 h-8 rounded-lg bg-gray-900 text-white flex items-center justify-center shrink-0 text-xs font-semibold" id="file-ext">
+                PDF
+              </div>
+              <div class="min-w-0">
+                <p id="file-name" class="text-[13px] font-medium text-gray-800 truncate">project-brief.pdf</p>
+                <p id="file-size" class="text-[11px] text-gray-400">2.4 MB</p>
+              </div>
+            </div>
+            <button type="button" id="remove-file" class="p-1.5 text-gray-400 hover:text-red-500 rounded-md hover:bg-red-50 transition-colors" title="Remove file">
+              <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/>
+              </svg>
+            </button>
+          </div>
+        </div>
+        <p id="file-error" class="hidden text-[11.5px] text-red-500 mt-1.5 font-medium"></p>
+      </div>
+
+      <!-- Two-Column Row: Project Name & Due Date -->
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <!-- Project Name -->
+        <div>
+          <label for="project-name" class="block text-[13px] font-medium text-gray-800 mb-1.5">
+            Project Name <span class="text-red-500">*</span>
+          </label>
+          <input type="text" id="project-name" placeholder="Enter project name" required
+            class="w-full px-3.5 py-2.5 text-[13.5px] bg-[#F8F9FA] border border-gray-200/80 rounded-lg text-gray-900 placeholder:text-gray-400 focus:bg-white focus:border-gray-900 focus:ring-2 focus:ring-gray-900/10 focus:outline-none transition-all duration-200" />
+          <p id="name-error" class="hidden text-[11.5px] text-red-500 mt-1 font-medium">Project name is required</p>
+        </div>
+
+        <!-- Due Date -->
+        <div>
+          <label for="due-date" class="block text-[13px] font-medium text-gray-800 mb-1.5">
+            Due Date
+          </label>
+          <div class="relative">
+            <div class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3.5 text-gray-400">
+              <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                <rect width="18" height="18" x="3" y="4" rx="2" ry="2"/>
+                <line x1="16" x2="16" y1="2" y2="6"/>
+                <line x1="8" x2="8" y1="2" y2="6"/>
+                <line x1="3" x2="21" y1="10" y2="10"/>
+              </svg>
+            </div>
+            <input type="text" id="due-date" placeholder="Pick a date"
+              onfocus="(this.type='date'); this.showPicker && this.showPicker();"
+              onblur="if(!this.value) this.type='text'"
+              class="w-full pl-9 pr-3.5 py-2.5 text-[13.5px] bg-[#F8F9FA] border border-gray-200/80 rounded-lg text-gray-900 placeholder:text-gray-400 focus:bg-white focus:border-gray-900 focus:ring-2 focus:ring-gray-900/10 focus:outline-none transition-all duration-200 cursor-pointer" />
+          </div>
+        </div>
+      </div>
+
+      <!-- Description -->
+      <div>
+        <label for="description" class="block text-[13px] font-medium text-gray-800 mb-1.5">
+          Description <span class="text-red-500">*</span>
+        </label>
+        <textarea id="description" rows="3" placeholder="Describe the project goals and scope" required
+          class="w-full px-3.5 py-2.5 text-[13.5px] bg-[#F8F9FA] border border-gray-200/80 rounded-lg text-gray-900 placeholder:text-gray-400 focus:bg-white focus:border-gray-900 focus:ring-2 focus:ring-gray-900/10 focus:outline-none transition-all duration-200 resize-none"></textarea>
+        <p id="desc-error" class="hidden text-[11.5px] text-red-500 mt-1 font-medium">Description is required</p>
+      </div>
+
+      <!-- Tags -->
+      <div>
+        <label for="tag-input" class="block text-[13px] font-medium text-gray-800 mb-1.5">
+          Tags
+        </label>
+        <div class="relative">
+          <input type="text" id="tag-input" placeholder="Add tags (e.g, design, marketing)"
+            class="w-full pl-3.5 pr-10 py-2.5 text-[13.5px] bg-[#F8F9FA] border border-gray-200/80 rounded-lg text-gray-900 placeholder:text-gray-400 focus:bg-white focus:border-gray-900 focus:ring-2 focus:ring-gray-900/10 focus:outline-none transition-all duration-200" />
+          <button type="button" id="add-tag-btn" aria-label="Add tag"
+            class="absolute right-2 top-1/2 -translate-y-1/2 p-1.5 text-gray-500 hover:text-gray-900 hover:bg-gray-200/60 rounded-md transition-colors">
+            <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <line x1="12" y1="5" x2="12" y2="19"></line>
+              <line x1="5" y1="12" x2="19" y2="12"></line>
+            </svg>
+          </button>
+        </div>
+
+        <!-- Tag Chips Container -->
+        <div id="tags-container" class="flex flex-wrap gap-2 mt-2.5">
+          <!-- Initial tags populated by JS -->
+        </div>
+      </div>
+
+      <!-- Members with access -->
+      <div class="pt-0.5">
+        <span class="block text-[13px] font-medium text-gray-800 mb-2.5">
+          Members with access
+        </span>
+        <div class="space-y-2.5">
+          <!-- Checkbox 1 (Checked by default per reference) -->
+          <label class="custom-checkbox flex items-center gap-2.5 cursor-pointer select-none group">
+            <input type="checkbox" id="access-link" checked class="sr-only" />
+            <div class="w-4 h-4 rounded-[4px] border border-gray-300 bg-white flex items-center justify-center transition-all duration-150 group-hover:border-blue-400">
+              <svg class="w-2.5 h-2.5 text-white transform scale-50 opacity-0 transition-all duration-150" viewBox="0 0 12 10" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="1.5 6 4.5 9 10.5 1"></polyline>
+              </svg>
+            </div>
+            <span class="text-[12.5px] text-gray-600 group-hover:text-gray-900 transition-colors">
+              Members who have link have access to this project
+            </span>
+          </label>
+
+          <!-- Checkbox 2 -->
+          <label class="custom-checkbox flex items-center gap-2.5 cursor-pointer select-none group">
+            <input type="checkbox" id="access-open" class="sr-only" />
+            <div class="w-4 h-4 rounded-[4px] border border-gray-300 bg-white flex items-center justify-center transition-all duration-150 group-hover:border-blue-400">
+              <svg class="w-2.5 h-2.5 text-white transform scale-50 opacity-0 transition-all duration-150" viewBox="0 0 12 10" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="1.5 6 4.5 9 10.5 1"></polyline>
+              </svg>
+            </div>
+            <span class="text-[12.5px] text-gray-600 group-hover:text-gray-900 transition-colors">
+              Open project
+            </span>
+          </label>
+        </div>
+      </div>
+
+      <!-- Footer Actions -->
+      <div class="pt-4 flex items-center justify-end gap-3">
+        <button type="button" id="cancel-btn"
+          class="px-5 py-2.5 text-[13.5px] font-medium text-gray-700 bg-white border border-gray-200/90 rounded-lg hover:bg-gray-50 hover:border-gray-300 active:scale-[0.98] transition-all duration-150">
+          Cancel
+        </button>
+        <button type="submit" id="save-btn"
+          class="inline-flex items-center justify-center gap-2 px-5 py-2.5 text-[13.5px] font-medium text-white bg-[#141414] hover:bg-black rounded-lg shadow-sm hover:shadow active:scale-[0.98] transition-all duration-150">
+          <!-- Floppy Disk Save Icon matching reference -->
+          <svg id="save-icon" class="w-4 h-4 text-gray-200" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/>
+            <polyline points="17 21 17 13 7 13 7 21"/>
+            <polyline points="7 3 7 8 15 8"/>
+          </svg>
+          <!-- Loading Spinner (Hidden initially) -->
+          <svg id="save-spinner" class="hidden w-4 h-4 animate-spin text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="3"></circle>
+            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+          </svg>
+          <span id="save-text">Save project</span>
+        </button>
+      </div>
+
+    </form>
+  </main>
+
+  <!-- Interactive UX Logic -->
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      // --- 1. Tag Management ---
+      const defaultTags = ['UI/UX Design', 'Marketing', 'Documentation'];
+      let tags = [...defaultTags];
+      const tagsContainer = document.getElementById('tags-container');
+      const tagInput = document.getElementById('tag-input');
+      const addTagBtn = document.getElementById('add-tag-btn');
+
+      function renderTagChip(tagText) {
+        const chip = document.createElement('span');
+        chip.className = 'chip-enter inline-flex items-center gap-2 px-3 py-1 bg-white border border-gray-200/90 rounded-full text-[11.5px] font-medium text-gray-800 shadow-chip hover:border-gray-300 transition-colors';
+        chip.dataset.tag = tagText;
+        chip.innerHTML = `
+          <span>${escapeHtml(tagText)}</span>
+          <button type="button" class="text-gray-400 hover:text-gray-900 focus:outline-none transition-colors" aria-label="Remove ${escapeHtml(tagText)}">
+            <svg class="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round">
+              <path d="M18 6L6 18M6 6l12 12"/>
+            </svg>
+          </button>
+        `;
+
+        chip.querySelector('button').addEventListener('click', () => {
+          chip.classList.remove('chip-enter');
+          chip.classList.add('chip-exit');
+          setTimeout(() => {
+            tags = tags.filter(t => t !== tagText);
+            chip.remove();
+          }, 150);
+        });
+
+        tagsContainer.appendChild(chip);
+      }
+
+      function initTags() {
+        tagsContainer.innerHTML = '';
+        tags.forEach(renderTagChip);
+      }
+
+      function addTagFromInput() {
+        const rawValue = tagInput.value.trim().replace(/,/g, '');
+        if (!rawValue) return;
+
+        // Avoid case-insensitive duplicates
+        const exists = tags.some(t => t.toLowerCase() === rawValue.toLowerCase());
+        if (exists) {
+          tagInput.classList.add('animate-shake', 'border-amber-400');
+          setTimeout(() => tagInput.classList.remove('animate-shake', 'border-amber-400'), 400);
+          tagInput.value = '';
+          return;
+        }
+
+        tags.push(rawValue);
+        renderTagChip(rawValue);
+        tagInput.value = '';
+      }
+
+      tagInput.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' || e.key === ',') {
+          e.preventDefault();
+          addTagFromInput();
+        }
+      });
+
+      addTagBtn.addEventListener('click', () => {
+        addTagFromInput();
+        tagInput.focus();
+      });
+
+      initTags();
+
+      // --- 2. Drag & Drop File Upload ---
+      const dropzone = document.getElementById('dropzone');
+      const fileInput = document.getElementById('file-input');
+      const uploadPrompt = document.getElementById('upload-prompt');
+      const filePreview = document.getElementById('file-preview');
+      const fileNameEl = document.getElementById('file-name');
+      const fileSizeEl = document.getElementById('file-size');
+      const fileExtEl = document.getElementById('file-ext');
+      const removeFileBtn = document.getElementById('remove-file');
+      const fileError = document.getElementById('file-error');
+      let selectedFile = null;
+
+      dropzone.addEventListener('click', (e) => {
+        if (e.target.closest('#remove-file')) return;
+        fileInput.click();
+      });
+
+      dropzone.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          fileInput.click();
+        }
+      });
+
+      ['dragenter', 'dragover'].forEach(evt => {
+        dropzone.addEventListener(evt, (e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          dropzone.classList.add('border-blue-500', 'bg-blue-50/30');
+        });
+      });
+
+      ['dragleave', 'drop'].forEach(evt => {
+        dropzone.addEventListener(evt, (e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          dropzone.classList.remove('border-blue-500', 'bg-blue-50/30');
+        });
+      });
+
+      dropzone.addEventListener('drop', (e) => {
+        const files = e.dataTransfer.files;
+        if (files && files.length > 0) {
+          handleFileSelection(files[0]);
+        }
+      });
+
+      fileInput.addEventListener('change', (e) => {
+        if (e.target.files && e.target.files.length > 0) {
+          handleFileSelection(e.target.files[0]);
+        }
+      });
+
+      function handleFileSelection(file) {
+        fileError.classList.add('hidden');
+        const validTypes = ['image/jpeg', 'image/png', 'application/pdf'];
+        const maxSize = 10 * 1024 * 1024; // 10MB
+
+        if (!validTypes.includes(file.type)) {
+          showFileError('Invalid file format. Please upload a JPG, PNG, or PDF file.');
+          return;
+        }
+        if (file.size > maxSize) {
+          showFileError('File exceeds 10MB limit. Please choose a smaller file.');
+          return;
+        }
+
+        selectedFile = file;
+        const ext = file.name.split('.').pop().toUpperCase();
+        fileExtEl.textContent = ext;
+        fileNameEl.textContent = file.name;
+        fileSizeEl.textContent = formatBytes(file.size);
+
+        uploadPrompt.classList.add('hidden');
+        filePreview.classList.remove('hidden');
+        filePreview.classList.add('flex');
+      }
+
+      function showFileError(msg) {
+        fileError.textContent = msg;
+        fileError.classList.remove('hidden');
+        dropzone.classList.add('animate-shake', 'border-red-400');
+        setTimeout(() => dropzone.classList.remove('animate-shake', 'border-red-400'), 450);
+      }
+
+      removeFileBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        clearFile();
+      });
+
+      function clearFile() {
+        selectedFile = null;
+        fileInput.value = '';
+        filePreview.classList.add('hidden');
+        filePreview.classList.remove('flex');
+        uploadPrompt.classList.remove('hidden');
+        fileError.classList.add('hidden');
+      }
+
+      // --- 3. Form Validation & Submission ---
+      const form = document.getElementById('project-form');
+      const nameInput = document.getElementById('project-name');
+      const descInput = document.getElementById('description');
+      const nameError = document.getElementById('name-error');
+      const descError = document.getElementById('desc-error');
+      const saveBtn = document.getElementById('save-btn');
+      const saveIcon = document.getElementById('save-icon');
+      const saveSpinner = document.getElementById('save-spinner');
+      const saveText = document.getElementById('save-text');
+      const cancelBtn = document.getElementById('cancel-btn');
+
+      // Clear validation error on input
+      nameInput.addEventListener('input', () => {
+        if (nameInput.value.trim()) {
+          nameError.classList.add('hidden');
+          nameInput.classList.remove('border-red-400');
+        }
+      });
+
+      descInput.addEventListener('input', () => {
+        if (descInput.value.trim()) {
+          descError.classList.add('hidden');
+          descInput.classList.remove('border-red-400');
+        }
+      });
+
+      form.addEventListener('submit', (e) => {
+        e.preventDefault();
+        let isValid = true;
+
+        if (!nameInput.value.trim()) {
+          nameError.classList.remove('hidden');
+          nameInput.classList.add('border-red-400', 'animate-shake');
+          setTimeout(() => nameInput.classList.remove('animate-shake'), 400);
+          isValid = false;
+        }
+
+        if (!descInput.value.trim()) {
+          descError.classList.remove('hidden');
+          descInput.classList.add('border-red-400', 'animate-shake');
+          setTimeout(() => descInput.classList.remove('animate-shake'), 400);
+          isValid = false;
+        }
+
+        if (!isValid) return;
+
+        // Simulate Async Save State
+        saveBtn.disabled = true;
+        saveIcon.classList.add('hidden');
+        saveSpinner.classList.remove('hidden');
+        saveText.textContent = 'Saving...';
+
+        setTimeout(() => {
+          saveBtn.disabled = false;
+          saveIcon.classList.remove('hidden');
+          saveSpinner.classList.add('hidden');
+          saveText.textContent = 'Save project';
+          showToast(`Project "${nameInput.value.trim()}" saved!`);
+        }, 900);
+      });
+
+      cancelBtn.addEventListener('click', () => {
+        form.reset();
+        clearFile();
+        const dueDate = document.getElementById('due-date');
+        dueDate.type = 'text';
+        nameError.classList.add('hidden');
+        descError.classList.add('hidden');
+        nameInput.classList.remove('border-red-400');
+        descInput.classList.remove('border-red-400');
+        tags = [...defaultTags];
+        initTags();
+        showToast('Form reset to default');
+      });
+
+      // --- Utilities ---
+      let toastTimeout;
+      function showToast(message) {
+        const toast = document.getElementById('toast');
+        const toastMsg = document.getElementById('toast-message');
+        toastMsg.textContent = message;
+        toast.classList.remove('-translate-y-20', 'opacity-0');
+        toast.classList.add('translate-y-0', 'opacity-100');
+
+        clearTimeout(toastTimeout);
+        toastTimeout = setTimeout(() => {
+          toast.classList.remove('translate-y-0', 'opacity-100');
+          toast.classList.add('-translate-y-20', 'opacity-0');
+        }, 3000);
+      }
+
+      function formatBytes(bytes) {
+        if (bytes === 0) return '0 Bytes';
+        const k = 1024;
+        const sizes = ['Bytes', 'KB', 'MB'];
+        const i = Math.floor(Math.log(bytes) / Math.log(k));
+        return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + ' ' + sizes[i];
+      }
+
+      function escapeHtml(str) {
+        return str.replace(/[&<>"']/g, (m) => ({
+          '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+        }[m]));
+      }
+    });
+  </script>
+</body>
+</html>

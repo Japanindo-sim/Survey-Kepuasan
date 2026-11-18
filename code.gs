@@ -1,351 +1,322 @@
-// ================================================================
-//  JP Smart SIM — Google Apps Script
-//  Menerima data survey dari HTML form → Google Sheets + Google Drive
-//
-//  CARA DEPLOY:
-//  1. Buka script.google.com → New Project
-//  2. Paste seluruh kode ini
-//  3. Isi SPREADSHEET_ID dan DRIVE_FOLDER_ID di bawah
-//  4. Deploy → New Deployment → Web App
-//     - Execute as : Me (akun Google Kakak)
-//     - Who has access : Anyone
-//  5. Copy "Web app URL" → paste ke GAS_URL di survey-jp-smart-sim.html
-// ================================================================
-
-// ──────────────────────────────────────────────────────────────
-// !! WAJIB DIUBAH !!
-// ──────────────────────────────────────────────────────────────
-const CONFIG = {
-  SPREADSHEET_ID : '1yLihwoTdtBXf0YT924S7ONcU4UvgIClt9za3mbC-hNQ',
-  // Cara ambil ID: buka spreadsheet → lihat URL
-  // https://docs.google.com/spreadsheets/d/ [[ INI_ID_NYA ]] /edit
-  
-  DRIVE_FOLDER_ID: '1-xnep591KK-d9o7FPiUvjmr-aNII8Jcd',
-  // Cara ambil ID: buka folder Drive → lihat URL
-  // https://drive.google.com/drive/folders/ [[ INI_ID_NYA ]]
-  
-  SHEET_NAME: '03 SURVEY KEPUASAN DAN KELUHAN',
-  // Nama sheet/tab di dalam spreadsheet
-};
-
-// ──────────────────────────────────────────────────────────────
-// KOLOM TETAP — JANGAN UBAH URUTAN INI sembarangan.
-// Jika ingin tambah kolom baru → TAMBAHKAN DI PALING AKHIR SAJA.
-// Penambahan di tengah akan menggeser data yang sudah ada.
-// ──────────────────────────────────────────────────────────────
+// JP Smart SIM Survey v2 — configuration and deployment: README.md.
+// Google service calls are tested with mocks; no test helper writes to production.
 const HEADERS = [
-  'Timestamp',
-  'Nama Lengkap',
-  'No. WhatsApp',
-  'Lama Penggunaan',
-  'Domisili / Wilayah',
-  'Kualitas Sinyal',
-  'Tertarik Autodebet',
-  'Ada Referral',
-  'Nama Referral',
-  'WA Referral',
-  'Saran',
-  'Sejak Kapan Kendala',
-  'Lokasi Kendala',
-  'Kondisi Area',
-  'Jam / Aktivitas Kendala',
-  'Merk & Tipe HP',
-  'Link Screenshot Speedtest',
-  'Paket saat ini',
+  'Timestamp', 'Nama Lengkap', 'No. WhatsApp', 'Lama Penggunaan',
+  'Domisili / Wilayah', 'Kualitas Sinyal', 'Tertarik Autodebet', 'Ada Referral',
+  'Nama Referral', 'WA Referral', 'Saran', 'Sejak Kapan Kendala',
+  'Lokasi Kendala', 'Kondisi Area', 'Jam / Aktivitas Kendala',
+  'Merk & Tipe HP', 'Link Screenshot Speedtest', 'Paket saat ini',
 ];
+const LEDGER_HEADERS = ['Request ID', 'Payload SHA256', 'Reserved Row', 'Status',
+  'File ID', 'Warning', 'Created At', 'Sheet ID'];
+const LIMITS = { imageBytes: 5 * 1024 * 1024, bodyChars: 7020000 };
+const CHOICES = {
+  lamaUse: ['< 1 bulan', '1–3 bulan', '3–6 bulan', '> 6 bulan'],
+  paket: ['Paket 3GB/Bulan', 'Paket 20GB/Bulan', 'Paket 50GB/Bulan', 'Paket MAX (3GB / Hari)'],
+  sinyal: ['Sangat Bagus', 'Bagus', 'Kurang Bagus', 'Sangat Jelek'],
+  autodebet: ['', 'Ya, hubungi saya', 'Tidak untuk saat ini'],
+  adaReferral: ['', 'Ada', 'Belum ada'],
+  lokasiKendala: ['', 'Di dalam ruangan (Indoor)', 'Di luar ruangan (Outdoor)'],
+  kondisiArea: ['', 'Perkotaan', 'Pegunungan', 'Pesisir Pantai', 'Lainnya'],
+};
+const TEXT_LIMITS = { nama: 120, whatsapp: 40, lamaUse: 40, paket: 80,
+  domisili: 500, sinyal: 40, autodebet: 80, adaReferral: 40,
+  namaReferral: 120, waReferral: 40, saran: 2000, sejakkendala: 500,
+  lokasiKendala: 80, kondisiArea: 40, jamAktivitas: 500, merkHP: 120 };
 
-// ================================================================
-//  doPost — Entry point utama.
-//  Dipanggil setiap kali form mengirim data.
-// ================================================================
-function doPost(e) {
-  // ScriptLock: hindari race condition jika ada dua request masuk bersamaan
-  const lock = LockService.getScriptLock();
-  try {
-    lock.waitLock(20000);
-  } catch (lockErr) {
-    Logger.log('[LOCK] Timeout: ' + lockErr.toString());
-    return jsonResponse(false, 'Server sedang sibuk, coba beberapa detik lagi.');
+function failure_(code, message) {
+  const error = new Error(message);
+  error.code = code;
+  return error;
+}
+
+function getConfig_() {
+  const p = PropertiesService.getScriptProperties().getProperties();
+  if (!['test', 'production'].includes(p.ENVIRONMENT) || !p.SPREADSHEET_ID || !p.DRIVE_FOLDER_ID) {
+    throw failure_('CONFIG_REQUIRED', 'Layanan belum dikonfigurasi. Hubungi tim JP Smart SIM.');
   }
+  return {
+    spreadsheetId: p.SPREADSHEET_ID, folderId: p.DRIVE_FOLDER_ID,
+    sheetName: p.SHEET_NAME || '03 SURVEY KEPUASAN DAN KELUHAN',
+    ledgerName: p.LEDGER_NAME || '_JP_SURVEY_REQUESTS_V2',
+    reviewers: (p.UPLOAD_REVIEWER_EMAILS || '').split(',').map(s => s.trim().toLowerCase()).filter(Boolean),
+  };
+}
 
+function doPost(e) {
+  const started = Date.now();
+  let locked = false;
+  let lock;
+  let requestId = '';
+  let acquired = 0;
   try {
-    // ── 1. Parse body ───────────────────────────────────────────
-    let data;
-    try {
-      data = JSON.parse(e.postData.contents);
-    } catch (parseErr) {
-      lock.releaseLock();
-      Logger.log('[PARSE ERROR] ' + parseErr.toString());
-      return jsonResponse(false, 'Format data tidak valid. Pastikan survey dikirim dari form resmi.');
+    // Parsing, type validation, decoding and hashing do not require a global lock.
+    const body = e && e.postData && e.postData.contents;
+    if (typeof body !== 'string' || body.length > LIMITS.bodyChars) {
+      throw failure_('INVALID_BODY', 'Ukuran atau format kiriman tidak valid.');
+    }
+    let raw;
+    try { raw = JSON.parse(body); }
+    catch (_) { throw failure_('INVALID_JSON', 'Format data tidak valid.'); }
+    const parsed = validatePayload_(raw);
+    const data = parsed.data;
+    requestId = data.requestId;
+    const fingerprint = sha256_(JSON.stringify(data));
+    const config = getConfig_();
+    const validated = Date.now();
+    lock = LockService.getScriptLock();
+    if (!lock.tryLock(20000)) throw failure_('BUSY', 'Server sedang sibuk. Coba kirim kembali dengan isian yang sama.');
+    locked = true;
+    acquired = Date.now();
+
+    const ss = SpreadsheetApp.openById(config.spreadsheetId);
+    const sheet = ss.getSheetByName(config.sheetName) || ss.insertSheet(config.sheetName);
+    const ledger = ss.getSheetByName(config.ledgerName) || ss.insertSheet(config.ledgerName);
+    if (config.sheetName === config.ledgerName) throw failure_('CONFIG_REQUIRED', 'Konfigurasi tab perlu diperiksa tim JP Smart SIM.');
+    ensureHeaders_(sheet, HEADERS, true);
+    ensureHeaders_(ledger, LEDGER_HEADERS, false);
+    let record = findRecord_(ledger, requestId);
+    if (record && (record.values[1] !== fingerprint || Number(record.values[7]) !== sheet.getSheetId())) {
+      throw failure_('REQUEST_CONFLICT', 'Identitas kiriman sudah digunakan untuk data lain. Muat ulang formulir untuk kiriman baru.');
+    }
+    if (record && record.values[3] === 'COMMITTED') {
+      return jsonResponse(true, 'Jawaban sudah tersimpan.', { requestId: requestId, warnings: warnings_(record.values[5]), duplicate: true });
+    }
+    if (!record) {
+      checkRateLimit_(data.whatsapp);
+      const lastReserved = ledger.getLastRow() > 1 ? Number(ledger.getRange(ledger.getLastRow(), 3).getValue()) : 1;
+      if (!Number.isInteger(lastReserved) || lastReserved < 1) throw failure_('LEDGER_INVALID', 'Pencatatan kiriman perlu diperiksa tim JP Smart SIM.');
+      const row = Math.max(sheet.getLastRow() + 1, lastReserved + 1);
+      const values = [requestId, fingerprint, row, 'RESERVED', '', '',
+        Utilities.formatDate(new Date(), 'Asia/Tokyo', 'yyyy-MM-dd HH:mm:ss'), sheet.getSheetId()];
+      record = { row: ledger.getLastRow() + 1, values: values };
+      writeRecord_(ledger, record);
+      SpreadsheetApp.flush(); // Persist the reservation before any Drive side effect.
     }
 
-    Logger.log('[RECEIVED] Nama: ' + data.nama + ' | Sinyal: ' + data.sinyal);
-
-    // ── 2. Upload gambar ke Drive (jika ada) ────────────────────
+    // A stable filename and a durable reservation allow retries after a lost response.
+    // Drive I/O remains in the lock: moving it out needs a distributed lease and risks duplicates.
     let imageLink = '';
-    if (data.imageBase64 && String(data.imageBase64).length > 10) {
+    if (parsed.bytes && !record.values[5]) {
+      const uploadStarted = Date.now();
       try {
-        imageLink = uploadImageToDrive_(data);
-        Logger.log('[IMAGE] Berhasil upload: ' + imageLink);
-      } catch (imgErr) {
-        // TIDAK menggagalkan seluruh submission hanya karena gambar gagal upload
-        imageLink = '[Upload gagal: ' + imgErr.message + ']';
-        Logger.log('[IMAGE ERROR] ' + imgErr.toString());
+        const file = uploadImageToDrive_(data, parsed.bytes, config, record.values[4]);
+        record.values[4] = file.getId();
+        writeRecord_(ledger, record);
+        SpreadsheetApp.flush();
+        imageLink = 'https://drive.google.com/file/d/' + record.values[4] + '/view';
+      } catch (error) {
+        if (error.code !== 'UPLOAD_ACCESS') throw error;
+        record.values[5] = 'Jawaban tersimpan, tetapi screenshot tidak tersimpan karena akses folder belum sesuai. Hubungi tim JP Smart SIM.';
+        writeRecord_(ledger, record);
+      } finally {
+        Logger.log(JSON.stringify({ event: 'upload_timing', milliseconds: Date.now() - uploadStarted }));
       }
     }
-
-    // ── 3. Simpan ke Spreadsheet ────────────────────────────────
-    saveToSheet_(data, imageLink);
-    Logger.log('[SAVED] Data berhasil masuk ke spreadsheet.');
-
-    lock.releaseLock();
-    return jsonResponse(true, 'Data berhasil disimpan. Terima kasih sudah mengisi survey!');
-
-  } catch (err) {
-    lock.releaseLock();
-    Logger.log('[CRITICAL ERROR] ' + err.toString());
-    return jsonResponse(false, 'Terjadi kesalahan di server: ' + err.toString());
+    if (record.values[4] && !record.values[5]) imageLink = 'https://drive.google.com/file/d/' + record.values[4] + '/view';
+    const rowValues = buildRow_(data, imageLink || (record.values[5] ? '[Screenshot tidak tersimpan]' : ''), record.values[6]);
+    commitRow_(sheet, record, rowValues);
+    record.values[3] = 'COMMITTED';
+    writeRecord_(ledger, record);
+    SpreadsheetApp.flush();
+    Logger.log(JSON.stringify({ event: 'submission_timing', validationMs: validated - started,
+      waitMs: acquired - validated, lockedMs: Date.now() - acquired }));
+    return jsonResponse(true, 'Data berhasil disimpan. Terima kasih sudah mengisi survey!',
+      { requestId: requestId, warnings: warnings_(record.values[5]), duplicate: false });
+  } catch (error) {
+    const code = error.code || 'STORAGE_UNCERTAIN';
+    Logger.log(JSON.stringify({ event: 'submission_error', code: code }));
+    return jsonResponse(false, error.code ? error.message :
+      'Penyimpanan belum dapat dipastikan. Coba kirim kembali tanpa mengubah isian.',
+    { code: code, requestId: requestId, warnings: [] });
+  } finally {
+    if (locked) lock.releaseLock();
   }
 }
 
-// ================================================================
-//  doGet — Health-check endpoint.
-//  Buka URL script di browser → harus muncul JSON status active.
-// ================================================================
 function doGet() {
-  return ContentService
-    .createTextOutput(JSON.stringify({
-      status: 'active',
-      script: 'JP Smart SIM Survey API',
-      timestamp: new Date().toISOString(),
-    }))
+  return ContentService.createTextOutput(JSON.stringify({ status: 'active', version: '2.0.0',
+    script: 'JP Smart SIM Survey API', timestamp: new Date().toISOString() }))
     .setMimeType(ContentService.MimeType.JSON);
 }
 
-// ================================================================
-//  uploadImageToDrive_ — Decode base64 → simpan ke Google Drive
-// ================================================================
-function uploadImageToDrive_(data) {
-  const folder = DriveApp.getFolderById(CONFIG.DRIVE_FOLDER_ID);
-
-  const mimeType = data.imageType || 'image/jpeg';
-  let ext = (mimeType.split('/')[1] || 'jpg').replace('jpeg', 'jpg');
-
-  const safeName = (data.nama || 'unknown')
-    .replace(/[^a-zA-Z0-9\u3040-\u30FF\u4E00-\u9FAF]/g, '_')
-    .substring(0, 30);
-  const ts = Utilities.formatDate(new Date(), 'Asia/Tokyo', 'yyyyMMdd_HHmmss');
-  const fileName = 'speedtest_' + safeName + '_' + ts + '.' + ext;
-
-  const decoded = Utilities.base64Decode(data.imageBase64);
-  const blob    = Utilities.newBlob(decoded, mimeType, fileName);
-  const file    = folder.createFile(blob);
-
-  // ✅ Ambil ID dan bangun URL SEBELUM setSharing dipanggil.
-  //    Dengan cara ini, URL selalu ada walau setSharing gagal.
-  const fileId  = file.getId();
-  const fileUrl = 'https://drive.google.com/file/d/' + fileId + '/view?usp=sharing';
-
-  // setSharing dipisah di try-catch sendiri — gagal tidak memblokir URL.
-  try {
-    file.setSharing(DriveApp.Access.ANYONE_WITH_LINK, DriveApp.Permission.VIEW);
-  } catch (shareErr) {
-    // Ini hanya warning. File sudah tersimpan dan URL sudah ada.
-    Logger.log('[SHARE WARNING] setSharing gagal (mungkin dibatasi admin/org): ' + shareErr.toString());
-    Logger.log('[SHARE WARNING] File tetap tersimpan. ID: ' + fileId);
-    // Coba cara alternatif: publish via Drive API v3 jika tersedia
-    // (tidak perlu dalam kebanyakan kasus personal Google Account)
+function validatePayload_(raw) {
+  if (!raw || typeof raw !== 'object' || Array.isArray(raw)) throw failure_('VALIDATION', 'Data formulir harus berupa objek.');
+  if (typeof raw.requestId !== 'string' || !/^[a-f0-9]{8}-[a-f0-9]{4}-4[a-f0-9]{3}-[89ab][a-f0-9]{3}-[a-f0-9]{12}$/i.test(raw.requestId)) {
+    throw failure_('VALIDATION', 'Identitas kiriman tidak valid. Muat ulang formulir.');
   }
-
-  Logger.log('[IMAGE URL] ' + fileUrl);
-  return fileUrl; // ← Selalu return URL, bukan pesan error
+  const allowed = Object.keys(TEXT_LIMITS).concat(['requestId', 'imageBase64', 'imageType', 'imageName']);
+  if (Object.keys(raw).some(key => !allowed.includes(key))) throw failure_('VALIDATION', 'Kiriman memuat field yang tidak dikenal.');
+  const data = { requestId: raw.requestId.toLowerCase() };
+  Object.keys(TEXT_LIMITS).forEach(key => {
+    if (raw[key] !== undefined && typeof raw[key] !== 'string') throw failure_('VALIDATION', 'Tipe isian ' + key + ' tidak valid.');
+    const value = (raw[key] || '').trim();
+    if (value.length > TEXT_LIMITS[key] || /[\u0000-\u0008\u000b\u000c\u000e-\u001f]/.test(value)) {
+      throw failure_('VALIDATION', 'Panjang atau isi ' + key + ' tidak valid.');
+    }
+    data[key] = value;
+  });
+  ['nama', 'whatsapp', 'lamaUse', 'paket', 'domisili', 'sinyal'].forEach(key => {
+    if (!data[key]) throw failure_('VALIDATION', 'Informasi dasar belum lengkap.');
+  });
+  Object.keys(CHOICES).forEach(key => {
+    if (!CHOICES[key].includes(data[key])) throw failure_('VALIDATION', 'Pilihan ' + key + ' tidak valid.');
+  });
+  data.whatsapp = normalizePhone_(data.whatsapp);
+  if (!data.whatsapp) throw failure_('VALIDATION', 'Gunakan nomor WhatsApp Indonesia (+62) atau Jepang (+81) yang valid.');
+  if (data.waReferral) {
+    data.waReferral = normalizePhone_(data.waReferral);
+    if (!data.waReferral) throw failure_('VALIDATION', 'Nomor WhatsApp teman tidak valid.');
+  }
+  const badSignal = ['Kurang Bagus', 'Sangat Jelek'].includes(data.sinyal);
+  const complaintKeys = ['sejakkendala', 'lokasiKendala', 'kondisiArea', 'jamAktivitas', 'merkHP'];
+  const goodKeys = ['autodebet', 'adaReferral', 'namaReferral', 'waReferral', 'saran'];
+  if (badSignal && complaintKeys.some(key => !data[key])) throw failure_('VALIDATION', 'Detail kendala belum lengkap.');
+  if ((badSignal ? goodKeys : complaintKeys).some(key => data[key])) throw failure_('VALIDATION', 'Isian tidak sesuai jalur penilaian sinyal.');
+  if (data.adaReferral !== 'Ada' && (data.namaReferral || data.waReferral)) throw failure_('VALIDATION', 'Detail teman tidak sesuai pilihan referral.');
+  let bytes = null;
+  if (raw.imageBase64 !== undefined && raw.imageBase64 !== '') {
+    if (!badSignal || typeof raw.imageBase64 !== 'string' || raw.imageBase64.length > Math.ceil(LIMITS.imageBytes / 3) * 4 ||
+      raw.imageBase64.length % 4 !== 0 || !/^[A-Za-z0-9+/]+={0,2}$/.test(raw.imageBase64)) {
+      throw failure_('VALIDATION', 'Gambar tidak valid atau melebihi 5 MB.');
+    }
+    if (typeof raw.imageType !== 'string' || !['image/jpeg', 'image/png', 'image/heic', 'image/heif'].includes(raw.imageType)) {
+      throw failure_('VALIDATION', 'Gunakan gambar JPG, PNG, atau HEIC.');
+    }
+    if (raw.imageName !== undefined && (typeof raw.imageName !== 'string' || raw.imageName.length > 255)) throw failure_('VALIDATION', 'Nama berkas tidak valid.');
+    try { bytes = Utilities.base64Decode(raw.imageBase64); }
+    catch (_) { throw failure_('VALIDATION', 'Gambar tidak dapat dibaca.'); }
+    if (!bytes.length || bytes.length > LIMITS.imageBytes || !matchesImage_(bytes, raw.imageType)) throw failure_('VALIDATION', 'Isi gambar tidak sesuai jenis berkas.');
+    data.imageBase64 = raw.imageBase64;
+    data.imageType = raw.imageType;
+  } else if (raw.imageType || raw.imageName) {
+    throw failure_('VALIDATION', 'Data gambar tidak lengkap.');
+  }
+  return { data: data, bytes: bytes };
 }
 
-// ================================================================
-//  saveToSheet_ — Simpan satu baris data ke Spreadsheet
-// ================================================================
-function saveToSheet_(data, imageLink) {
-  const ss = SpreadsheetApp.openById(CONFIG.SPREADSHEET_ID);
-  let sheet = ss.getSheetByName(CONFIG.SHEET_NAME);
-  
-  // Buat sheet baru jika belum ada
-  if (!sheet) {
-    sheet = ss.insertSheet(CONFIG.SHEET_NAME);
-    Logger.log('[SHEET] Sheet baru dibuat: ' + CONFIG.SHEET_NAME);
-  }
-  
-  // Pastikan header baris 1 sudah benar
-  ensureHeaders_(sheet);
-  
-  // Susun data SESUAI URUTAN HEADERS — ini kunci anti header-mismatch
-  const row = [
-    Utilities.formatDate(new Date(), 'Asia/Tokyo', 'yyyy-MM-dd HH:mm:ss'), // Timestamp (WIB +9)
-    data.nama           || '',
-    data.whatsapp       || '',
-    data.lamaUse        || '',
-    data.domisili       || '',
-    data.sinyal         || '',
-    data.autodebet      || '',
-    data.adaReferral    || '',
-    data.namaReferral   || '',
-    data.waReferral     || '',
-    data.saran          || '',
-    data.sejakkendala   || '',
-    data.lokasiKendala  || '',
-    data.kondisiArea    || '',
-    data.jamAktivitas   || '',
-    data.merkHP         || '',
-    imageLink           || '',
-    data.paket          || '',
-  ];
-  
-  // Validasi: pastikan jumlah kolom sama dengan HEADERS
-  if (row.length !== HEADERS.length) {
-    throw new Error(
-      'Mismatch kolom! row=' + row.length + ' HEADERS=' + HEADERS.length +
-      '. Periksa kode di saveToSheet_() dan array HEADERS.'
-    );
-  }
-  
-  sheet.appendRow(row);
+function normalizePhone_(value) {
+  if (!/^[+\d\s().-]+$/.test(value)) return '';
+  let phone = value.replace(/[\s().-]/g, '').replace(/^00/, '+');
+  if (/^0[789]0\d{8}$/.test(phone)) phone = '+81' + phone.slice(1);
+  else if (/^08/.test(phone)) phone = '+62' + phone.slice(1);
+  else if (/^0[1-9]/.test(phone)) phone = '+81' + phone.slice(1);
+  else if (/^(62|81)/.test(phone)) phone = '+' + phone;
+  return /^(?:\+628\d{7,11}|\+81[1-9]\d{8,9})$/.test(phone) ? phone : '';
 }
 
-// ================================================================
-//  ensureHeaders_ — Pastikan baris pertama adalah header yang benar.
-//  FIX untuk masalah klasik "Header not matched".
-// ================================================================
-function ensureHeaders_(sheet) {
-  const lastRow = sheet.getLastRow();
-  
-  if (lastRow === 0) {
-    // Sheet benar-benar kosong → buat header
-    sheet.appendRow(HEADERS);
-    formatHeaders_(sheet);
-    Logger.log('[HEADERS] Header baru dibuat.');
+function matchesImage_(bytes, mime) {
+  const b = bytes.map(n => n & 255);
+  if (mime === 'image/jpeg') return b.length > 4 && b[0] === 255 && b[1] === 216 && b[2] === 255 && b[b.length - 2] === 255 && b[b.length - 1] === 217;
+  if (mime === 'image/png') return b.length >= 24 && [137,80,78,71,13,10,26,10].every((n,i) => b[i] === n) && String.fromCharCode.apply(null, b.slice(12,16)) === 'IHDR';
+  const header = String.fromCharCode.apply(null, b.slice(8, Math.min(b.length, 64)));
+  return b.length >= 16 && String.fromCharCode.apply(null, b.slice(4,8)) === 'ftyp' && /(heic|heix|hevc|hevx|mif1|msf1)/.test(header);
+}
+
+function sha256_(text) {
+  return Utilities.computeDigest(Utilities.DigestAlgorithm.SHA_256, text, Utilities.Charset.UTF_8)
+    .map(n => ('0' + ((n + 256) % 256).toString(16)).slice(-2)).join('');
+}
+
+function checkRateLimit_(phone) {
+  // Best-effort abuse guard, not authentication. Cache eviction can reset counters.
+  const cache = CacheService.getScriptCache();
+  const bucket = Math.floor(Date.now() / 60000);
+  const keys = [ ['global:' + bucket, 30, 120], ['phone:' + sha256_(phone) + ':' + Math.floor(bucket / 10), 3, 660] ];
+  const counts = keys.map(item => Number(cache.get(item[0]) || 0));
+  if (counts.some((count, i) => count >= keys[i][1])) throw failure_('RATE_LIMIT', 'Terlalu banyak kiriman baru. Tunggu beberapa menit lalu coba kembali.');
+  keys.forEach((item, i) => cache.put(item[0], String(counts[i] + 1), item[2]));
+}
+
+function ensureHeaders_(sheet, expected, allowLegacy) {
+  if (!sheet.getLastRow()) {
+    sheet.getRange(1, 1, 1, expected.length).setValues([expected]);
+    sheet.setFrozenRows(1);
     return;
   }
-  
-  // Ambil baris pertama yang ada
-  const lastCol       = Math.max(sheet.getLastColumn(), HEADERS.length);
-  const existingRange = sheet.getRange(1, 1, 1, lastCol);
-  const existingRow   = existingRange.getValues()[0];
-  
-  // Cek apakah semua header cocok
-  const allMatch = HEADERS.every(
-    (h, i) => String(existingRow[i] || '').trim() === String(h).trim()
-  );
-  
-  if (!allMatch) {
-    // Header tidak cocok → perbaiki paksa
-    Logger.log('[HEADERS] Header tidak cocok! Memperbaiki...');
-    Logger.log('Ada  : ' + JSON.stringify(existingRow.slice(0, HEADERS.length)));
-    Logger.log('Harus: ' + JSON.stringify(HEADERS));
-    
-    // Set ulang header (hanya baris 1, data tidak tersentuh)
-    sheet.getRange(1, 1, 1, HEADERS.length).setValues([HEADERS]);
-    formatHeaders_(sheet);
-    Logger.log('[HEADERS] Header berhasil diperbaiki.');
+  const existing = sheet.getRange(1, 1, 1, Math.max(sheet.getLastColumn(), expected.length)).getValues()[0];
+  const exact = expected.every((h, i) => String(existing[i] || '').trim() === h) && existing.slice(expected.length).every(v => !v);
+  if (exact) return;
+  // Recognize only the known 17-column version; never relabel an unknown schema.
+  if (allowLegacy && sheet.getLastColumn() === 17 && expected.slice(0,17).every((h,i) => String(existing[i] || '').trim() === h)) {
+    sheet.getRange(1,18).setValue(expected[17]);
+    return;
   }
+  throw failure_('SCHEMA_MISMATCH', 'Susunan kolom perlu diperiksa tim JP Smart SIM. Data lama tidak diubah.');
 }
 
-// ================================================================
-//  formatHeaders_ — Styling visual untuk baris header
-// ================================================================
-function formatHeaders_(sheet) {
-  const hRange = sheet.getRange(1, 1, 1, HEADERS.length);
-  
-  hRange.setBackground('#0F3460');     // navy blue
-  hRange.setFontColor('#FFFFFF');
-  hRange.setFontWeight('bold');
-  hRange.setFontSize(11);
-  hRange.setHorizontalAlignment('center');
-  hRange.setVerticalAlignment('middle');
-  hRange.setWrapStrategy(SpreadsheetApp.WrapStrategy.WRAP);
-  
-  sheet.setFrozenRows(1);              // freeze baris header
-  sheet.setRowHeight(1, 38);
-  
-  // Auto-resize semua kolom
-  sheet.autoResizeColumns(1, HEADERS.length);
+function findRecord_(ledger, requestId) {
+  if (ledger.getLastRow() < 2) return null;
+  const match = ledger.getRange(2,1,ledger.getLastRow() - 1,1).createTextFinder(requestId).matchEntireCell(true).findNext();
+  return match ? { row: match.getRow(), values: ledger.getRange(match.getRow(),1,1,LEDGER_HEADERS.length).getValues()[0] } : null;
 }
 
-// ================================================================
-//  jsonResponse — Helper membuat response JSON (dengan MIME type benar)
-// ================================================================
-function jsonResponse(success, message) {
-  return ContentService
-    .createTextOutput(JSON.stringify({ success: success, message: message }))
+function writeRecord_(ledger, record) {
+  ledger.getRange(record.row,1,1,LEDGER_HEADERS.length).setValues([record.values]);
+}
+
+function restricted_(resource, config) {
+  const owner = resource.getOwner();
+  const ownerEmail = owner && owner.getEmail();
+  if (!ownerEmail) return false; // Shared Drive/unknown ownership requires a separate access audit.
+  const allowed = config.reviewers.concat([ownerEmail.toLowerCase()]);
+  return resource.getSharingAccess() === DriveApp.Access.PRIVATE &&
+    resource.getEditors().concat(resource.getViewers()).every(user => {
+      const email = user.getEmail();
+      return Boolean(email) && allowed.includes(email.toLowerCase());
+    });
+}
+
+function uploadImageToDrive_(data, bytes, config, fileId) {
+  const folder = DriveApp.getFolderById(config.folderId);
+  if (!restricted_(folder, config)) throw failure_('UPLOAD_ACCESS', 'Folder upload tidak terbatas.');
+  const extension = { 'image/jpeg': 'jpg', 'image/png': 'png', 'image/heic': 'heic', 'image/heif': 'heif' }[data.imageType];
+  const filename = 'speedtest_' + data.requestId + '.' + extension;
+  let file;
+  if (fileId) file = DriveApp.getFileById(fileId);
+  else {
+    const existing = folder.getFilesByName(filename);
+    file = existing.hasNext() ? existing.next() : folder.createFile(Utilities.newBlob(bytes, data.imageType, filename));
+  }
+  if (!restricted_(file, config)) throw failure_('UPLOAD_PRIVACY_UNCERTAIN', 'Akses screenshot perlu diperiksa tim. Coba kembali setelah tim memeriksa akses.');
+  return file;
+}
+
+function safeCell_(value) {
+  // Keep user strings literal in Sheets, including international phone numbers.
+  const text = String(value || '');
+  return /^[=+\-@\t\r]/.test(text) ? "'" + text : text;
+}
+
+function buildRow_(data, imageLink, timestamp) {
+  return [timestamp, data.nama, data.whatsapp, data.lamaUse, data.domisili, data.sinyal,
+    data.autodebet, data.adaReferral, data.namaReferral, data.waReferral, data.saran,
+    data.sejakkendala, data.lokasiKendala, data.kondisiArea, data.jamAktivitas,
+    data.merkHP, imageLink, data.paket].map(safeCell_);
+}
+
+function commitRow_(sheet, record, values) {
+  const row = Number(record.values[2]);
+  if (!Number.isInteger(row) || row < 2) throw failure_('LEDGER_INVALID', 'Nomor baris kiriman tidak valid.');
+  if (row > sheet.getMaxRows()) sheet.insertRowsAfter(sheet.getMaxRows(), row - sheet.getMaxRows());
+  const first = sheet.getRange(row,1);
+  const marker = 'JP_SURVEY:' + record.values[0] + ':' + record.values[1];
+  const range = sheet.getRange(row,1,1,HEADERS.length);
+  const occupied = range.getValues()[0].some(value => value !== '');
+  const note = first.getNote();
+  if ((note && note !== marker) || (occupied && note !== marker)) throw failure_('ROW_CONFLICT', 'Baris kiriman perlu diperiksa tim. Data yang ada tidak ditimpa.');
+  if (!occupied) {
+    first.setNote(marker);
+    SpreadsheetApp.flush();
+    range.setNumberFormat('@').setValues([values]);
+    SpreadsheetApp.flush();
+  }
+  // If the values were written before a crash, the matching note identifies the same commit.
+}
+
+function warnings_(warning) { return warning ? [String(warning)] : []; }
+
+function jsonResponse(success, message, details) {
+  return ContentService.createTextOutput(JSON.stringify(Object.assign({ success: success, message: message }, details || {})))
     .setMimeType(ContentService.MimeType.JSON);
-}
-
-// ================================================================
-//  testSubmission — Jalankan ini dari editor GAS untuk testing
-//  tanpa harus buka form HTML sama sekali.
-// ================================================================
-function testSubmission() {
-  const mockData = {
-    nama:          'Budi Santoso (Test)',
-    whatsapp:      '+62812345678',
-    lamaUse:       '1–3 bulan',
-    domisili:      'Tokyo',
-    sinyal:        'Bagus',
-    autodebet:     'Tidak untuk saat ini',
-    adaReferral:   'Ada',
-    namaReferral:  'Ani Putri',
-    waReferral:    '+62898765432',
-    saran:         'Semoga makin lancar dan murah!',
-    // Kolom 3B dikosongkan karena sinyal "Bagus"
-    sejakkendala:  '',
-    lokasiKendala: '',
-    kondisiArea:   '',
-    jamAktivitas:  '',
-    merkHP:        '',
-    paket:         'Paket 20GB/Bulan',
-  };
-  
-  const mockEvent = {
-    postData: { contents: JSON.stringify(mockData) }
-  };
-  
-  const result = doPost(mockEvent);
-  Logger.log('=== TEST RESULT ===');
-  Logger.log(result.getContent());
-}
-
-// ================================================================
-//  testBadSignal — Test untuk alur sinyal jelek + gambar dummy
-// ================================================================
-function testBadSignal() {
-  // Buat gambar dummy 1x1 pixel PNG sebagai base64
-  const dummyPng = 'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==';
-  
-  const mockData = {
-    nama:          'Siti Rahayu (Test Bad Signal)',
-    whatsapp:      '+62811222333',
-    lamaUse:       '> 6 bulan',
-    domisili:      'Osaka',
-    sinyal:        'Kurang Bagus',
-    autodebet:     '',
-    adaReferral:   '',
-    namaReferral:  '',
-    waReferral:    '',
-    saran:         '',
-    sejakkendala:  'Sejak 3 minggu lalu setelah pindah apartemen',
-    lokasiKendala: 'Di dalam ruangan (Indoor)',
-    kondisiArea:   'Perkotaan',
-    jamAktivitas:  'Malam jam 9, saat streaming YouTube',
-    merkHP:        'iPhone 14 Pro',
-    imageBase64:   dummyPng,
-    imageName:     'test_speedtest.png',
-    imageType:     'image/png',
-    paket:         'Paket MAX (3GB / Hari)',
-  };
-  
-  const mockEvent = {
-    postData: { contents: JSON.stringify(mockData) }
-  };
-  
-  const result = doPost(mockEvent);
-  Logger.log('=== TEST BAD SIGNAL RESULT ===');
-  Logger.log(result.getContent());
 }

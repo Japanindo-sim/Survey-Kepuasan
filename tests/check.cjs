@@ -1,0 +1,13 @@
+const fs = require('node:fs');
+const path = require('node:path');
+const vm = require('node:vm');
+const assert = require('node:assert/strict');
+const root = path.join(__dirname,'..');
+const html = fs.readFileSync(path.join(root,'index.html'),'utf8');
+new vm.Script(fs.readFileSync(path.join(root,'code.gs'),'utf8'),{ filename:'code.gs' });
+for (const [,script] of html.matchAll(/<script>([\s\S]*?)<\/script>/g)) new vm.Script(script,{ filename:'index.html' });
+const ids = [...html.matchAll(/\bid="([^"]+)"/g)].map(m => m[1]);
+assert.equal(new Set(ids).size,ids.length,'Duplicate element IDs');
+for (const [,id] of html.matchAll(/getElementById\('([^']+)'\)/g)) assert.ok(ids.includes(id),'Missing element: ' + id);
+JSON.parse(fs.readFileSync(path.join(root,'appsscript.json'),'utf8'));
+console.log('Syntax, manifest JSON and literal DOM references passed.');

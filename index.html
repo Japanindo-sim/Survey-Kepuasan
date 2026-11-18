@@ -2,592 +2,184 @@
 <html lang="id">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <meta name="theme-color" content="#0F3460">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#fafafa">
+  <meta name="description" content="Survei kepuasan dan keluhan sinyal JP Smart SIM untuk pelanggan di Jepang.">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%23141414'/%3E%3Cpath d='M7 24v-4m6 4V15m6 9V10m6 14V5' stroke='white' stroke-width='2' stroke-linecap='round'/%3E%3C/svg%3E">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <title>Survey Kepuasan Sinyal – JP Smart SIM</title>
   <style>
-    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+/* Components adapted from refecence.html; no runtime CSS library required. */
+:root {
+  --page: #fafafa; --surface: #fff; --field: #f8f9fa;
+  --ink: #18191b; --body: #42464e; --muted: #666d77;
+  --line: #e4e6e9; --accent: #4f7df3; --accent-soft: #f1f5ff;
+  --danger: #b42335; --success: #177552;
+}
+*, *::before, *::after { box-sizing: border-box; }
+* { margin: 0; }
+html { color-scheme: light; scroll-padding-top: 24px; }
+body {
+  min-height: 100vh; min-height: 100dvh;
+  padding: 40px 20px 48px;
+  background-color: var(--page);
+  background-image: linear-gradient(to right, #eeeeef 1px, transparent 1px),
+    linear-gradient(to bottom, #eeeeef 1px, transparent 1px);
+  background-size: 96px 96px; background-position: center top;
+  color: var(--ink);
+  font: 400 15px/1.6 Inter, -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif;
+  -webkit-font-smoothing: antialiased; -webkit-text-size-adjust: 100%;
+}
+button, input, select, textarea { font: inherit; }
+button, a, label { -webkit-tap-highlight-color: transparent; }
+button, a { touch-action: manipulation; }
+svg { display: block; flex: 0 0 auto; }
+::selection { background: #dce7ff; color: #172d63; }
+[hidden] { display: none !important; }
+.skip-link { position: absolute; top: 8px; left: 16px; transform: translateY(-150%); padding: 8px 16px; background: var(--ink); color: #fff; z-index: 2; border-radius: 6px; }
+.skip-link:focus { transform: translateY(0); }
+.survey-shell { max-width: 640px; margin-inline: auto; min-width: 0; background: var(--surface); border: 1px solid var(--line); border-radius: 22px; box-shadow: 0 20px 50px -12px #0f172a14, 0 4px 16px -4px #0f172a0a; overflow: clip; animation: enter .4s ease both; }
+.header { padding: 32px 32px 0; }
+.header-logo { display: flex; align-items: center; gap: 9px; margin-bottom: 20px; font-size: 11px; font-weight: 700; letter-spacing: .13em; color: var(--body); }
+.brand-icon { width: 24px; height: 24px; color: var(--ink); }
+.header h1 { font-size: clamp(22px, 4vw, 27px); font-weight: 650; letter-spacing: -.045em; line-height: 1.3; max-width: 490px; text-wrap: balance; }
+.header p { margin-top: 10px; color: var(--muted); font-size: 14px; line-height: 1.65; text-wrap: balance; }
+.progress-meta { display: flex; justify-content: space-between; gap: 12px; font-size: 11px; color: var(--muted); margin-top: 24px; margin-bottom: 8px; font-variant-numeric: tabular-nums; }
+.progress-bar { height: 4px; background: #eff0f2; border-radius: 4px; overflow: hidden; }
+.progress-fill { height: 100%; width: 0; background: var(--accent); border-radius: inherit; transition: width .2s ease; }
+.container { padding: 28px 32px 0; }
+.card { padding: 0 0 26px; margin-bottom: 26px; border-bottom: 1px solid var(--line); }
+.card-title { display: flex; align-items: center; gap: 10px; margin-bottom: 22px; font-size: 13px; line-height: 1.5; font-weight: 600; color: var(--ink); letter-spacing: -.01em; }
+.card-title-icon { display: flex; align-items: center; justify-content: center; width: 30px; height: 30px; flex: 0 0 auto; border: 1px solid var(--line); border-radius: 8px; color: #525862; background: #fcfcfd; }
+.card-title-icon svg { width: 17px; height: 17px; }
+.field { min-width: 0; margin-bottom: 20px; }
+.field:last-child { margin-bottom: 0; }
+label { display: block; color: #30343a; font-size: 13px; font-weight: 550; line-height: 1.55; margin-bottom: 7px; }
+label .note { display: block; font-weight: 400; font-size: 12px; color: var(--muted); margin-top: 4px; }
+.required-star { color: var(--danger); margin-left: 2px; }
+input[type='text'], input[type='tel'], textarea, select {
+  width: 100%; min-width: 0; padding: 11px 13px; min-height: 46px;
+  background: var(--field); color: var(--ink); border: 1px solid var(--line); border-radius: 9px;
+  font-size: 16px; line-height: 1.5; -webkit-appearance: none; appearance: none;
+  transition: border-color .18s ease, background-color .18s ease, box-shadow .18s ease;
+}
+input::placeholder, textarea::placeholder { color: #69717d; opacity: 1; }
+input[type='text']:hover, input[type='tel']:hover, textarea:hover, select:hover { border-color: #bec3cb; }
+input[type='text']:focus, input[type='tel']:focus, textarea:focus, select:focus { outline: none; background: #fff; border-color: var(--ink); box-shadow: 0 0 0 3px #18191b0d; }
+textarea { min-height: 110px; resize: vertical; }
+select { padding-right: 36px; cursor: pointer; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='none' stroke='%23666d77' stroke-width='1.5'%3E%3Cpath d='m4 6 4 4 4-4'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 12px center; }
+.field-error { display: none; color: var(--danger); margin-top: 6px; font-size: 12px; font-weight: 400; line-height: 1.55; }
+.field-error.show { display: block; }
+.invalid { border-color: var(--danger) !important; box-shadow: 0 0 0 2px #b423350d !important; }
+.opts { display: flex; flex-direction: column; gap: 9px; }
+.opt { display: flex; align-items: flex-start; gap: 10px; margin: 0; padding: 12px 13px; border: 1px solid var(--line); border-radius: 9px; font-weight: 400; cursor: pointer; transition: background-color .18s, border-color .18s; }
+.opt:hover { background: #fafbfc; border-color: #b8bec8; }
+.opt input { accent-color: var(--accent); width: 17px; height: 17px; margin: 2px 0 0; flex: 0 0 auto; }
+.opt-text { color: var(--body); font-size: 13px; line-height: 1.6; }
+.opt:has(input:checked) { border-color: var(--accent); background: var(--accent-soft); }
+.opt:has(input:checked) .opt-text { color: #243c75; }
+.opt:focus-within, .signal-btn:focus-within { outline: 3px solid #4f7df34d; outline-offset: 3px; }
+.signal-grid { display: grid; grid-template-columns: repeat(2, minmax(0,1fr)); gap: 10px; }
+.signal-btn { position: relative; display: flex; align-items: center; gap: 10px; padding: 15px 12px; min-height: 66px; border: 1px solid var(--line); border-radius: 10px; margin: 0; cursor: pointer; transition: background-color .18s, border-color .18s, transform .18s; }
+.signal-btn input { position: absolute; width: 1px; height: 1px; padding: 0; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+.signal-btn:hover { border-color: #b8bec8; background: #fafbfc; }
+.signal-btn:active { transform: translateY(1px); }
+.signal-emoji { color: #7d8490; }
+.signal-emoji svg { width: 25px; height: 25px; }
+.signal-lbl { font-size: 13px; font-weight: 500; line-height: 1.35; }
+.signal-btn::after { content: ''; width: 13px; height: 13px; flex: 0 0 auto; margin-left: auto; border: 1px solid #c7cbd2; border-radius: 50%; background: #fff; }
+.signal-btn.is-good, .signal-btn.is-bad { border-color: var(--accent); background: var(--accent-soft); }
+.signal-btn.is-good::after, .signal-btn.is-bad::after { border: 4px solid var(--accent); }
+.signal-btn.is-good .signal-emoji, .signal-btn.is-bad .signal-emoji { color: var(--accent); }
+.cond-section { display: none; }
+.cond-section.show { display: block; animation: enter .25s ease; }
+.sub-fields { display: none; padding: 16px; margin-top: 12px; border: 1px solid var(--line); border-radius: 10px; background: #fbfbfc; }
+.sub-fields.show { display: block; }
+.sub-fields .field { margin-bottom: 16px; }
+.sub-fields .field:last-child { margin-bottom: 0; }
+.info-box { padding: 12px 14px; font-size: 12px; line-height: 1.7; border-radius: 9px; margin-bottom: 20px; }
+.info-box.blue { background: #f1f5ff; border: 1px solid #dce6ff; color: #354c7c; }
+.info-box.amber { background: #fffbef; border: 1px solid #eee1b6; color: #75561a; }
+.speedtest-btn { display: inline-flex; align-items: center; gap: 8px; margin: 2px 0 12px; padding: 8px 11px; color: #3e4651; background: #fff; border: 1px solid var(--line); border-radius: 7px; font-size: 12px; font-weight: 500; text-decoration: none; transition: background .18s, border-color .18s; }
+.speedtest-btn:hover { border-color: #a6aeb9; background: var(--field); }
+.upload-wrapper { position: relative; min-width: 0; border: 1.5px dashed #cdd1d8; border-radius: 11px; background: #fff; transition: background .18s, border-color .18s; }
+.upload-wrapper:hover { border-color: #959da9; background: #fafbfc; }
+.upload-wrapper:focus-within { border-color: var(--accent); outline: 3px solid #4f7df326; outline-offset: 3px; }
+.upload-tap-area { padding: 24px 14px; text-align: center; pointer-events: none; }
+.upload-icon-big { display: flex; justify-content: center; margin-bottom: 10px; color: #6e7682; }
+.upload-icon-big svg { width: 28px; height: 28px; }
+.upload-text-main { color: #3d434d; font-size: 13px; font-weight: 500; }
+.upload-text-sub { color: var(--muted); font-size: 12px; margin-top: 4px; }
+.upload-input-real { position: absolute; inset: 0; width: 100%; height: 100%; opacity: 0; cursor: pointer; font-size: 16px; }
+.upload-status { font-size: 12px; line-height: 1.6; color: var(--muted); margin-top: 8px; }
+.upload-status:empty { display: none; }
+.file-preview { display: none; align-items: center; gap: 12px; min-width: 0; margin-top: 12px; padding: 10px 12px; border: 1px solid var(--line); border-radius: 9px; background: var(--field); }
+.file-preview.show { display: flex; }
+.file-preview-img { width: 44px; height: 44px; flex: 0 0 auto; object-fit: cover; border-radius: 6px; border: 1px solid var(--line); color: var(--muted); font-size: 10px; }
+.file-preview-meta { min-width: 0; flex: 1; }
+.file-preview-name { overflow: hidden; white-space: nowrap; text-overflow: ellipsis; font-size: 12px; font-weight: 500; }
+.file-preview-size { font-size: 11px; color: var(--muted); margin-top: 2px; }
+.file-remove-btn { display: flex; align-items: center; justify-content: center; flex: 0 0 auto; width: 40px; height: 40px; border: 0; border-radius: 7px; background: transparent; color: var(--muted); font-size: 18px; cursor: pointer; }
+.file-remove-btn:hover { background: #fff0f0; color: var(--danger); }
+.submit-card { margin: -2px 0 0; padding-bottom: 26px; }
+.btn-submit { display: flex; align-items: center; justify-content: center; gap: 10px; width: 100%; min-height: 48px; padding: 12px 18px; border: 1px solid #141414; background: #141414; color: #fff; border-radius: 9px; font-size: 14px; line-height: 1.6; font-weight: 550; cursor: pointer; transition: background .18s, transform .18s, box-shadow .18s; }
+.btn-submit:hover:not(:disabled) { background: #303030; box-shadow: 0 3px 8px #18191b12; }
+.btn-submit:active:not(:disabled) { transform: translateY(1px); }
+.btn-submit:disabled { opacity: .6; cursor: wait; }
+form[aria-busy='true'] .btn-submit::before { content: ''; width: 15px; height: 15px; border: 2px solid #ffffff66; border-top-color: #fff; border-radius: 50%; animation: spin .7s linear infinite; }
+button:focus-visible, a:focus-visible, .success-card:focus-visible { outline: 3px solid #4f7df380; outline-offset: 4px; }
+input:disabled, select:disabled, textarea:disabled { opacity: .7; }
+.err-global { display: none; margin-top: 14px; border: 1px solid #f0cdd2; border-radius: 9px; padding: 12px 14px; background: #fff5f6; color: var(--danger); font-size: 12px; line-height: 1.7; overflow-wrap: anywhere; }
+.err-global.show { display: block; }
+.success-card { display: none; padding: 14px 0 32px; text-align: center; }
+.success-card.show { display: block; animation: enter .3s ease; }
+.success-ico { display: flex; justify-content: center; color: var(--success); margin-bottom: 20px; }
+.success-ico svg { width: 56px; height: 56px; padding: 14px; border-radius: 50%; background: #eaf6ef; }
+.success-title { font-size: 22px; line-height: 1.4; font-weight: 600; letter-spacing: -.035em; margin-bottom: 12px; }
+.success-body { font-size: 14px; line-height: 1.8; color: var(--muted); }
+.success-badge { display: inline-block; border-top: 1px solid var(--line); margin-top: 24px; padding-top: 16px; font-size: 12px; color: var(--body); }
+#successWarning { margin-top: 20px; }
+.footer { border-top: 1px solid var(--line); padding: 20px 0 24px; font-size: 11px; line-height: 1.9; text-align: center; color: var(--muted); text-wrap: pretty; }
+@keyframes enter { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+@keyframes spin { to { transform: rotate(360deg); } }
+@media (max-width: 600px) { body { padding: 20px 14px 32px; } .header { padding: 26px 24px 0; } .container { padding: 26px 24px 0; } }
+@media (max-width: 380px) { body { padding: 12px 10px 24px; } .survey-shell { border-radius: 16px; } .header { padding: 24px 18px 0; } .container { padding: 24px 18px 0; } .header h1 { font-size: 22px; } .signal-btn { gap: 7px; padding: 13px 9px; } .signal-lbl { font-size: 12px; } .signal-emoji svg { width: 21px; height: 21px; } }
+@media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation: none !important; transition: none !important; scroll-behavior: auto !important; } }
 
-    :root {
-      --navy:        #0F3460;
-      --blue:        #1D6FE8;
-      --blue-mid:    #2C7BF0;
-      --blue-lt:     #EBF2FF;
-      --blue-border: #BFDBFE;
-      --cyan:        #0EA5E9;
-      --green:       #059669;
-      --green-lt:    #D1FAE5;
-      --red:         #DC2626;
-      --red-lt:      #FEE2E2;
-      --amber-lt:    #FFF8E1;
-      --amber-bd:    #FDE68A;
-      --amber-tx:    #92400E;
-      --bg:          #F0F5FF;
-      --card:        #FFFFFF;
-      --text:        #1E293B;
-      --muted:       #64748B;
-      --border:      #DDE3EF;
-      --radius:      14px;
-      --shadow-sm:   0 1px 3px rgba(15,52,96,.07), 0 4px 16px rgba(15,52,96,.06);
-      --shadow-md:   0 4px 24px rgba(15,52,96,.10);
-    }
-
-    body {
-      font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Helvetica Neue',
-                   'Segoe UI', Roboto, Arial, sans-serif;
-      background: var(--bg);
-      color: var(--text);
-      min-height: 100vh;
-      padding-bottom: 48px;
-      -webkit-font-smoothing: antialiased;
-      -webkit-text-size-adjust: 100%;
-    }
-
-    /* ── HEADER ─────────────────────────────────── */
-    .header {
-      background: linear-gradient(150deg, #0B2A52 0%, #0F3460 45%, #1A4F98 100%);
-      color: #fff;
-      padding: 32px 20px 42px;
-      text-align: center;
-      position: relative;
-      overflow: hidden;
-    }
-    .header::before {
-      content: '';
-      position: absolute;
-      inset: 0;
-      background-image: radial-gradient(circle at 20% 80%, rgba(14,165,233,.18) 0%, transparent 50%),
-                        radial-gradient(circle at 80% 20%, rgba(29,111,232,.22) 0%, transparent 50%);
-    }
-    .header-inner { position: relative; z-index: 1; }
-    .header-logo {
-      display: inline-flex;
-      align-items: center;
-      gap: 8px;
-      background: rgba(255,255,255,.12);
-      border: 1px solid rgba(255,255,255,.22);
-      border-radius: 40px;
-      padding: 6px 16px;
-      font-size: 13px;
-      font-weight: 700;
-      letter-spacing: .5px;
-      margin-bottom: 16px;
-    }
-    .header-logo .dot {
-      width: 8px; height: 8px;
-      background: #38BDF8;
-      border-radius: 50%;
-      animation: pulse 2s ease-in-out infinite;
-    }
-    @keyframes pulse {
-      0%,100% { opacity: 1; transform: scale(1); }
-      50% { opacity: .5; transform: scale(.8); }
-    }
-    .header h1 {
-      font-size: 22px;
-      font-weight: 800;
-      margin-bottom: 8px;
-      letter-spacing: -.3px;
-      line-height: 1.3;
-    }
-    .header p {
-      font-size: 14px;
-      opacity: .82;
-      line-height: 1.6;
-    }
-
-    /* ── CONTAINER ───────────────────────────────── */
-    .container {
-      max-width: 600px;
-      margin: 16px auto 0;
-      padding: 0 14px;
-    }
-
-    /* ── CARD ────────────────────────────────────── */
-    .card {
-      background: var(--card);
-      border-radius: var(--radius);
-      box-shadow: var(--shadow-sm);
-      padding: 20px;
-      margin-bottom: 14px;
-      border: 1px solid rgba(221,227,239,.6);
-    }
-    .card-title {
-      font-size: 11px;
-      font-weight: 800;
-      text-transform: uppercase;
-      letter-spacing: 1.2px;
-      color: var(--blue);
-      margin-bottom: 18px;
-      padding-bottom: 12px;
-      border-bottom: 2px solid var(--blue-lt);
-      display: flex;
-      align-items: center;
-      gap: 8px;
-    }
-    .card-title-icon {
-      width: 26px; height: 26px;
-      background: var(--blue-lt);
-      border-radius: 8px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 14px;
-      flex-shrink: 0;
-    }
-
-    /* ── FORM FIELDS ─────────────────────────────── */
-    .field { margin-bottom: 18px; }
-    .field:last-child { margin-bottom: 0; }
-
-    label {
-      display: block;
-      font-size: 13.5px;
-      font-weight: 700;
-      color: var(--text);
-      margin-bottom: 7px;
-      line-height: 1.4;
-    }
-    label .note {
-      display: block;
-      font-weight: 400;
-      font-size: 12px;
-      color: var(--muted);
-      margin-top: 2px;
-    }
-    .required-star { color: var(--red); margin-left: 2px; }
-
-    input[type="text"],
-    input[type="tel"],
-    textarea,
-    select {
-      width: 100%;
-      padding: 12px 14px;
-      border: 1.5px solid var(--border);
-      border-radius: 10px;
-      font-size: 16px; /* KRITIS: font-size 16px mencegah auto-zoom Safari iOS */
-      font-family: inherit;
-      color: var(--text);
-      background: #fff;
-      transition: border-color .2s, box-shadow .2s;
-      -webkit-appearance: none;
-      appearance: none;
-    }
-    input[type="text"]:focus,
-    input[type="tel"]:focus,
-    textarea:focus,
-    select:focus {
-      outline: none;
-      border-color: var(--blue);
-      box-shadow: 0 0 0 3px rgba(29,111,232,.14);
-    }
-    textarea {
-      resize: vertical;
-      min-height: 90px;
-      line-height: 1.6;
-    }
-    select {
-      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 14 14'%3E%3Cpath fill='%2364748B' d='M7 10L1.5 4h11z'/%3E%3C/svg%3E");
-      background-repeat: no-repeat;
-      background-position: right 13px center;
-      padding-right: 38px;
-      cursor: pointer;
-    }
-    input.invalid, textarea.invalid, select.invalid {
-      border-color: var(--red) !important;
-      box-shadow: 0 0 0 3px rgba(220,38,38,.10);
-    }
-    .field-error {
-      font-size: 12px;
-      color: var(--red);
-      margin-top: 5px;
-      display: none;
-      font-weight: 500;
-    }
-    .field-error.show { display: block; }
-
-    /* ── OPTION CARDS ────────────────────────────── */
-    .opts { display: flex; flex-direction: column; gap: 8px; }
-    .opt {
-      display: flex;
-      align-items: flex-start;
-      gap: 11px;
-      padding: 12px 14px;
-      border: 1.5px solid var(--border);
-      border-radius: 10px;
-      cursor: pointer;
-      transition: border-color .15s, background .15s;
-      user-select: none;
-      -webkit-user-select: none;
-      -webkit-tap-highlight-color: transparent;
-      touch-action: manipulation;
-    }
-    .opt input[type="radio"],
-    .opt input[type="checkbox"] {
-      width: 18px; height: 18px;
-      flex-shrink: 0;
-      margin-top: 1px;
-      accent-color: var(--blue);
-      cursor: pointer;
-    }
-    .opt-text {
-      font-size: 14px;
-      font-weight: 500;
-      line-height: 1.5;
-      color: var(--text);
-    }
-    .opt:has(input:checked) {
-      border-color: var(--blue);
-      background: var(--blue-lt);
-    }
-    .opt:has(input:checked) .opt-text { color: var(--navy); font-weight: 600; }
-
-    /* ── SIGNAL GRID ─────────────────────────────── */
-    .signal-grid {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 8px;
-    }
-    .signal-btn {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      gap: 6px;
-      padding: 16px 10px 14px;
-      border: 2px solid var(--border);
-      border-radius: 12px;
-      cursor: pointer;
-      text-align: center;
-      transition: all .15s;
-      user-select: none;
-      -webkit-user-select: none;
-      -webkit-tap-highlight-color: transparent;
-      touch-action: manipulation;
-      position: relative;
-    }
-    .signal-btn input {
-      position: absolute;
-      opacity: 0;
-      width: 0; height: 0;
-      pointer-events: none;
-    }
-    .signal-emoji { font-size: 28px; line-height: 1; }
-    .signal-lbl {
-      font-size: 12.5px;
-      font-weight: 700;
-      color: var(--muted);
-    }
-    /* Good signals */
-    .signal-btn.is-good {
-      border-color: var(--green);
-      background: var(--green-lt);
-    }
-    .signal-btn.is-good .signal-lbl { color: var(--green); }
-    /* Bad signals */
-    .signal-btn.is-bad {
-      border-color: var(--red);
-      background: var(--red-lt);
-    }
-    .signal-btn.is-bad .signal-lbl { color: var(--red); }
-
-    /* ── CONDITIONAL SECTIONS ────────────────────── */
-    .cond-section {
-      display: none;
-    }
-    .cond-section.show {
-      display: block;
-      animation: slideDown .3s cubic-bezier(.16,.62,.34,1);
-    }
-    @keyframes slideDown {
-      from { opacity: 0; transform: translateY(12px); }
-      to   { opacity: 1; transform: translateY(0); }
-    }
-
-    /* ── REFERRAL SUB-FIELD ──────────────────────── */
-    .sub-fields {
-      margin-top: 10px;
-      padding: 14px;
-      background: var(--bg);
-      border-radius: 10px;
-      display: none;
-      gap: 10px;
-      flex-direction: column;
-    }
-    .sub-fields.show { display: flex; }
-    .sub-fields .field { margin-bottom: 0; }
-
-    /* ── SPEEDTEST LINK ──────────────────────────── */
-    .speedtest-btn {
-      display: inline-flex;
-      align-items: center;
-      gap: 8px;
-      background: var(--blue-lt);
-      color: var(--blue);
-      text-decoration: none;
-      padding: 9px 14px;
-      border-radius: 8px;
-      font-size: 13.5px;
-      font-weight: 700;
-      margin-bottom: 12px;
-      border: 1px solid var(--blue-border);
-      -webkit-tap-highlight-color: transparent;
-      touch-action: manipulation;
-    }
-    .speedtest-btn:active { opacity: .8; }
-
-    /* ── FILE UPLOAD (Safari-safe) ───────────────── */
-    .upload-wrapper {
-      border: 2px dashed var(--border);
-      border-radius: 12px;
-      position: relative;
-      overflow: hidden;
-      transition: border-color .2s, background .2s;
-      background: #FAFBFF;
-    }
-    .upload-wrapper:active { border-color: var(--blue); }
-    .upload-tap-area {
-      padding: 24px 16px;
-      text-align: center;
-      pointer-events: none; /* file input handles clicks */
-    }
-    .upload-icon-big { font-size: 36px; margin-bottom: 8px; }
-    .upload-text-main {
-      font-size: 14px;
-      font-weight: 700;
-      color: var(--blue);
-      margin-bottom: 3px;
-    }
-    .upload-text-sub {
-      font-size: 12px;
-      color: var(--muted);
-    }
-    /* The actual file input floats absolutely over entire area */
-    .upload-input-real {
-      position: absolute;
-      top: 0; left: 0;
-      width: 100%; height: 100%;
-      opacity: 0;
-      cursor: pointer;
-      /* font-size 16px prevents iOS zoom if input gets focused */
-      font-size: 16px;
-      z-index: 2;
-    }
-
-    /* File preview */
-    .file-preview {
-      display: none;
-      margin-top: 10px;
-      padding: 10px 12px;
-      background: var(--bg);
-      border-radius: 10px;
-      align-items: center;
-      gap: 10px;
-    }
-    .file-preview.show { display: flex; }
-    .file-preview-img {
-      width: 56px; height: 56px;
-      object-fit: cover;
-      border-radius: 8px;
-      border: 1px solid var(--border);
-      flex-shrink: 0;
-    }
-    .file-preview-meta { flex: 1; min-width: 0; }
-    .file-preview-name {
-      font-size: 13px;
-      font-weight: 600;
-      color: var(--text);
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-    }
-    .file-preview-size { font-size: 12px; color: var(--muted); margin-top: 2px; }
-    .file-remove-btn {
-      background: none;
-      border: none;
-      color: var(--red);
-      font-size: 20px;
-      cursor: pointer;
-      padding: 4px 6px;
-      line-height: 1;
-      flex-shrink: 0;
-      -webkit-tap-highlight-color: transparent;
-    }
-
-    /* ── INFO BOXES ──────────────────────────────── */
-    .info-box {
-      border-radius: 10px;
-      padding: 13px 14px;
-      font-size: 13px;
-      line-height: 1.6;
-      margin-bottom: 16px;
-    }
-    .info-box.amber {
-      background: var(--amber-lt);
-      border: 1px solid var(--amber-bd);
-      color: var(--amber-tx);
-    }
-    .info-box.blue {
-      background: var(--blue-lt);
-      border: 1px solid var(--blue-border);
-      color: var(--navy);
-    }
-
-    /* ── SUBMIT AREA ─────────────────────────────── */
-    .submit-card {
-      background: var(--card);
-      border-radius: var(--radius);
-      box-shadow: var(--shadow-md);
-      padding: 20px;
-      margin-bottom: 14px;
-      border: 1px solid rgba(221,227,239,.6);
-    }
-    .btn-submit {
-      width: 100%;
-      padding: 16px 24px;
-      background: linear-gradient(135deg, #0F3460 0%, #1D6FE8 100%);
-      color: #fff;
-      border: none;
-      border-radius: 12px;
-      font-size: 16px;
-      font-weight: 800;
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 9px;
-      transition: transform .15s, box-shadow .15s;
-      -webkit-tap-highlight-color: transparent;
-      touch-action: manipulation;
-      box-shadow: 0 4px 20px rgba(15,52,96,.30);
-      letter-spacing: .2px;
-    }
-    .btn-submit:active:not(:disabled) {
-      transform: scale(.98);
-      box-shadow: 0 2px 8px rgba(15,52,96,.2);
-    }
-    .btn-submit:disabled {
-      background: linear-gradient(135deg, #94A3B8 0%, #94A3B8 100%);
-      cursor: not-allowed;
-      box-shadow: none;
-    }
-    .spinner {
-      width: 18px; height: 18px;
-      border: 2.5px solid rgba(255,255,255,.35);
-      border-top-color: #fff;
-      border-radius: 50%;
-      animation: spin .7s linear infinite;
-      flex-shrink: 0;
-    }
-    @keyframes spin { to { transform: rotate(360deg); } }
-
-    .err-global {
-      margin-top: 13px;
-      background: var(--red-lt);
-      border: 1px solid #FECACA;
-      border-radius: 10px;
-      padding: 12px 14px;
-      color: var(--red);
-      font-size: 13px;
-      font-weight: 500;
-      line-height: 1.6;
-      display: none;
-    }
-    .err-global.show { display: block; }
-
-    /* ── SUCCESS ─────────────────────────────────── */
-    .success-card {
-      background: var(--card);
-      border-radius: var(--radius);
-      box-shadow: var(--shadow-md);
-      padding: 40px 24px;
-      margin-bottom: 14px;
-      text-align: center;
-      display: none;
-    }
-    .success-card.show { display: block; animation: slideDown .4s ease; }
-    .success-ico { font-size: 64px; margin-bottom: 16px; }
-    .success-title {
-      font-size: 20px;
-      font-weight: 800;
-      color: var(--green);
-      margin-bottom: 12px;
-    }
-    .success-body {
-      font-size: 14.5px;
-      color: var(--muted);
-      line-height: 1.75;
-    }
-    .success-badge {
-      display: inline-block;
-      margin-top: 20px;
-      background: var(--green-lt);
-      border: 1px solid #6EE7B7;
-      color: var(--green);
-      border-radius: 40px;
-      padding: 6px 18px;
-      font-size: 13px;
-      font-weight: 700;
-    }
-
-    /* ── FOOTER ──────────────────────────────────── */
-    .footer {
-      text-align: center;
-      font-size: 12px;
-      color: var(--muted);
-      padding: 16px 20px 0;
-    }
-
-    /* ── PROGRESS BAR ────────────────────────────── */
-    .progress-bar {
-      height: 4px;
-      background: rgba(255,255,255,.2);
-      position: absolute;
-      bottom: 0; left: 0; right: 0;
-    }
-    .progress-fill {
-      height: 100%;
-      background: #38BDF8;
-      border-radius: 0 2px 2px 0;
-      transition: width .4s ease;
-      width: 25%;
-    }
-
-    @media (max-width: 380px) {
-      .header h1 { font-size: 19px; }
-      .card { padding: 16px; }
-    }
   </style>
 </head>
 <body>
+<a class="skip-link" href="#mainForm">Langsung ke formulir</a>
+<main class="survey-shell" aria-labelledby="survey-title">
 
 <!-- HEADER -->
-<div class="header">
+<header class="header">
   <div class="header-inner">
     <div class="header-logo">
-      <div class="dot"></div>
+      <svg class="brand-icon" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19v-3m5 3v-6m5 6V9m5 10V5"/></svg>
       JP SMART SIM
     </div>
-    <h1>Survey Kepuasan &amp; Keluhan SINYAL</h1>
+    <h1 id="survey-title">Survey Kepuasan &amp; Keluhan SINYAL</h1>
     <p>Bantu kami hadir lebih baik untuk Kakak di Jepang 🗾</p>
   </div>
-  <div class="progress-bar">
+  <div class="progress-meta"><span>Kelengkapan survei</span><span id="progressText">0% terisi</span></div>
+  <div class="progress-bar" id="progressTrack" role="progressbar" aria-label="Kelengkapan survei" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">
     <div class="progress-fill" id="progressFill"></div>
   </div>
-</div>
+</header>
 
 <div class="container">
 
   <!-- ====== FORM ====== -->
-  <form id="mainForm" novalidate autocomplete="on">
+  <form id="mainForm" tabindex="-1" novalidate autocomplete="on">
 
     <!-- BAGIAN 1: INFO DASAR -->
     <div class="card">
-      <div class="card-title">
-        <div class="card-title-icon">📋</div>
+      <h2 class="card-title">
+        <div class="card-title-icon"><svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="4" width="14" height="17" rx="2"/><path d="M9 4V2h6v2M9 10h6m-6 4h6m-6 4h4"/></svg></div>
         Bagian 1 – Informasi Dasar
-      </div>
+      </h2>
 
       <div class="field">
         <label for="f_nama">
@@ -630,6 +222,7 @@
           <option value="">— Pilih paket —</option>
           <option value="Paket 3GB/Bulan">Paket 3GB/Bulan</option>
           <option value="Paket 20GB/Bulan">Paket 20GB/Bulan</option>
+          <option value="Paket 50GB/Bulan">Paket 50GB/Bulan</option>
           <option value="Paket MAX (3GB / Hari)">Paket MAX (3GB / Hari)</option>
         </select>
         <div class="field-error" id="err_paket">⚠️ Pilih paket yang kamu gunakan.</div>
@@ -648,35 +241,35 @@
 
     <!-- BAGIAN 2: PENILAIAN SINYAL -->
     <div class="card">
-      <div class="card-title">
-        <div class="card-title-icon">📶</div>
+      <h2 class="card-title">
+        <div class="card-title-icon"><svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19v-3m5 3v-6m5 6V9m5 10V5"/></svg></div>
         Bagian 2 – Penilaian SINYAL INTERNET
-      </div>
+      </h2>
 
       <div class="field">
-        <label>
+        <label id="signal-question">
           Secara keseluruhan, bagaimana kualitas SINYAL INTERNET JP Smart SIM yang Kakak rasakan?
           <span class="required-star">*</span>
         </label>
-        <div class="signal-grid">
+        <div class="signal-grid" role="radiogroup" aria-labelledby="signal-question" aria-describedby="err_sinyal" aria-required="true">
           <label class="signal-btn" id="sb_1">
             <input type="radio" name="sinyal" value="Sangat Bagus">
-            <div class="signal-emoji">😄</div>
+            <div class="signal-emoji"><svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19v-3"/><path d="M9 19v-7"/><path d="M14 19v-11"/><path d="M19 19v-15"/></svg></div>
             <div class="signal-lbl">Sangat Bagus</div>
           </label>
           <label class="signal-btn" id="sb_2">
             <input type="radio" name="sinyal" value="Bagus">
-            <div class="signal-emoji">🙂</div>
+            <div class="signal-emoji"><svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19v-3"/><path d="M9 19v-7"/><path d="M14 19v-11"/><path d="M19 19v-15" opacity=".2"/></svg></div>
             <div class="signal-lbl">Bagus</div>
           </label>
           <label class="signal-btn" id="sb_3">
             <input type="radio" name="sinyal" value="Kurang Bagus">
-            <div class="signal-emoji">😕</div>
+            <div class="signal-emoji"><svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19v-3"/><path d="M9 19v-7"/><path d="M14 19v-11" opacity=".2"/><path d="M19 19v-15" opacity=".2"/></svg></div>
             <div class="signal-lbl">Kurang Bagus</div>
           </label>
           <label class="signal-btn" id="sb_4">
             <input type="radio" name="sinyal" value="Sangat Jelek">
-            <div class="signal-emoji">😞</div>
+            <div class="signal-emoji"><svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19v-3"/><path d="M9 19v-7" opacity=".2"/><path d="M14 19v-11" opacity=".2"/><path d="M19 19v-15" opacity=".2"/></svg></div>
             <div class="signal-lbl">Sangat Jelek</div>
           </label>
         </div>
@@ -687,21 +280,21 @@
     <!-- BAGIAN 3A: SINYAL BAGUS (kondisional) -->
     <div class="cond-section" id="sec3a">
       <div class="card">
-        <div class="card-title">
-          <div class="card-title-icon">🌟</div>
+        <h2 class="card-title">
+          <div class="card-title-icon"><svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="m12 3 2.8 5.7 6.2.9-4.5 4.4 1.1 6.2-5.6-3-5.6 3 1.1-6.2L3 9.6l6.2-.9Z"/></svg></div>
           Bagian 3A – Informasi Tambahan
-        </div>
+        </h2>
 
         <div class="info-box blue">
           Senang mendengar Kakak puas! Kami ingin menjaga kepuasan ini dan berkembang bersama. 😊
         </div>
 
         <div class="field">
-          <label>
+          <label id="autodebet-question">
             Apakah Kakak tertarik mengaktifkan fitur <strong>Pembayaran Autodebet</strong>?
             <span class="note">Tidak perlu ke Kombini setiap bulan</span>
           </label>
-          <div class="opts">
+        <div class="opts" role="radiogroup" aria-labelledby="autodebet-question">
             <label class="opt">
               <input type="radio" name="autodebet" value="Ya, hubungi saya">
               <span class="opt-text">✅ Ya, hubungi saya dengan info lebih lanjut</span>
@@ -714,11 +307,11 @@
         </div>
 
         <div class="field">
-          <label>
+          <label id="referral-question">
             Adakah kenalan / teman yang sedang mencari SIM Card Jepang?
             <span class="note">💰 Dapatkan diskon/cashback spesial jika teman Kakak mendaftar!</span>
           </label>
-          <div class="opts">
+        <div class="opts" role="radiogroup" aria-labelledby="referral-question">
             <label class="opt">
               <input type="radio" name="adaReferral" value="Ada" id="r_ada">
               <span class="opt-text">👥 Ada (isi nama &amp; WA teman di bawah)</span>
@@ -730,19 +323,20 @@
           </div>
           <div class="sub-fields" id="refDetail">
             <div class="field">
-              <label for="f_namaRef" style="font-size:13px;">Nama Teman</label>
+              <label for="f_namaRef">Nama Teman</label>
               <input type="text" id="f_namaRef" placeholder="Nama lengkap teman">
             </div>
             <div class="field">
-              <label for="f_waRef" style="font-size:13px;">No. WhatsApp Teman</label>
+              <label for="f_waRef">No. WhatsApp Teman</label>
               <input type="tel" id="f_waRef" placeholder="+62812xxxxxxxx">
+              <div class="field-error" id="err_waRef">⚠️ Isi nomor WhatsApp teman yang valid (+62 atau +81).</div>
             </div>
           </div>
         </div>
 
         <div class="field">
           <label for="f_saran">
-            Saran untuk kami <em style="font-weight:400; font-size:12px; color:var(--muted);">(Opsional)</em>
+            Saran untuk kami <em>(Opsional)</em>
           </label>
           <textarea id="f_saran"
                     placeholder="Tuliskan saran Kakak agar kami bisa melayani lebih baik ke depannya…"></textarea>
@@ -753,10 +347,10 @@
     <!-- BAGIAN 3B: SINYAL JELEK (kondisional) -->
     <div class="cond-section" id="sec3b">
       <div class="card">
-        <div class="card-title">
-          <div class="card-title-icon">🔧</div>
+        <h2 class="card-title">
+          <div class="card-title-icon"><svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M14 6a5 5 0 0 0-6 6L3 17a2.8 2.8 0 0 0 4 4l5-5a5 5 0 0 0 6-6l-3 3-4-4Z"/></svg></div>
           Bagian 3B – Detail Kendala Sinyal
-        </div>
+        </h2>
 
         <div class="info-box amber">
           ⚠️ Maaf atas ketidaknyamanannya, Kakak. Tim teknis kami akan segera menginvestigasi. Mohon bantu isi detail di bawah ini ya.
@@ -772,10 +366,10 @@
         </div>
 
         <div class="field">
-          <label>
+          <label id="location-question">
             Dimana kendala ini paling sering terjadi? <span class="required-star">*</span>
           </label>
-          <div class="opts">
+        <div class="opts" role="radiogroup" aria-labelledby="location-question" aria-describedby="err_lokasi" aria-required="true">
             <label class="opt">
               <input type="radio" name="lokasiKendala" value="Di dalam ruangan (Indoor)">
               <span class="opt-text">🏠 Di dalam ruangan (Indoor)</span>
@@ -825,7 +419,7 @@
         <div class="field">
           <label>
             Upload Screenshot Speedtest
-            <em style="font-weight:400; font-size:12px; color:var(--muted);">(Opsional — sangat membantu tim teknis!)</em>
+            <em>(Opsional — sangat membantu tim teknis!)</em>
           </label>
           <a href="https://www.speedtest.net" target="_blank" rel="noopener noreferrer"
              class="speedtest-btn">
@@ -834,7 +428,7 @@
           <div class="upload-wrapper" id="uploadWrapper">
             <!--
               SAFARI FIX:
-              - accept="image/*" tanpa capture agar album foto terbuka (bukan kamera langsung)
+              - accept="image/jpeg,image/png,image/heic,image/heif,.heic,.heif" tanpa capture agar album foto terbuka (bukan kamera langsung)
               - font-size 16px pada input mencegah auto-zoom Safari iOS
               - Input diposisikan absolut di atas area klik
             -->
@@ -844,11 +438,12 @@
                    accept="image/*"
                    aria-label="Upload foto speedtest">
             <div class="upload-tap-area">
-              <div class="upload-icon-big">📸</div>
+              <div class="upload-icon-big"><svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4 15a6 6 0 1 1 11-7h2a4 4 0 0 1 3 7M12 12v9m-4-5 4-4 4 4"/></svg></div>
               <div class="upload-text-main">Ketuk untuk pilih foto</div>
               <div class="upload-text-sub">JPG, PNG, HEIC · Maks. 5 MB</div>
             </div>
           </div>
+          <p id="uploadStatus" role="status" class="upload-status"></p>
           <div class="file-preview" id="filePreview">
             <img class="file-preview-img" id="prevImg" src="" alt="Preview">
             <div class="file-preview-meta">
@@ -866,14 +461,14 @@
       <button type="submit" class="btn-submit" id="btnSubmit">
         <span id="btnLabel">✉️ Kirim Survey Sekarang</span>
       </button>
-      <div class="err-global" id="errGlobal"></div>
+      <div class="err-global" id="errGlobal" role="alert"></div>
     </div>
 
   </form>
 
   <!-- SUCCESS STATE -->
-  <div class="success-card" id="successCard">
-    <div class="success-ico">🎉</div>
+  <div class="success-card" id="successCard" tabindex="-1" role="status">
+    <div class="success-ico"><svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="m5 12 4 4L19 6"/></svg></div>
     <div class="success-title">Survey Berhasil Terkirim!</div>
     <div class="success-body">
       Terima kasih atas waktu dan masukannya, Kakak! 🙏<br><br>
@@ -881,13 +476,16 @@
       pengalaman internet Kakak menjadi lebih stabil dan
       nyaman setiap harinya. ✨
     </div>
+    <p id="successWarning" class="info-box amber" hidden></p>
     <div class="success-badge">📡 JP Smart SIM · Selalu hadir untuk Kakak</div>
   </div>
 
   <div class="footer">
-    © 2025 JP Smart SIM &nbsp;·&nbsp; Survey ini aman &amp; rahasia
+    © 2026 JP Smart SIM<br>Data digunakan untuk evaluasi layanan dan tindak lanjut survei. Screenshot tidak dibagikan secara publik oleh aplikasi. Hindari menyertakan informasi sensitif pada screenshot.
   </div>
 </div>
+
+</main>
 
 <!-- ============================================================
      JAVASCRIPT
@@ -895,385 +493,312 @@
 <script>
 'use strict';
 
-// ─────────────────────────────────────────────────────────────
-// !! WAJIB DIUBAH: Ganti dengan URL GAS yang sudah di-deploy !!
-// ─────────────────────────────────────────────────────────────
-const GAS_URL = 'https://script.google.com/macros/s/AKfycbxoQCDlf4uQ59zjeIm1M-NAjHDH1DrI2VUabvZ_XA3Kf00XKNElKqHUm9_esGKg2fO1/exec';
+// Configure explicitly after deploying the matching v2 backend; see README.md.
+const GAS_URL = (window.JP_SURVEY_CONFIG && window.JP_SURVEY_CONFIG.gasUrl) || '';
+const REQUEST_TIMEOUT_MS = 60000;
+const MAX_IMAGE_BYTES = 5 * 1024 * 1024;
+const MAX_LENGTHS = { f_nama: 120, f_wa: 40, f_domisili: 500, f_namaRef: 120,
+  f_waRef: 40, f_saran: 2000, f_sejak: 500, f_jam: 500, f_hp: 120 };
+const FIELD_MAP = { f_nama: 'nama', f_wa: 'whatsapp', f_lama: 'lamaUse', f_paket: 'paket',
+  f_domisili: 'domisili', f_namaRef: 'namaReferral', f_waRef: 'waReferral', f_saran: 'saran',
+  f_sejak: 'sejakkendala', f_kondisi: 'kondisiArea', f_jam: 'jamAktivitas', f_hp: 'merkHP' };
+const ERROR_MAP = { f_nama: 'err_nama', f_wa: 'err_wa', f_lama: 'err_lama', f_paket: 'err_paket',
+  f_domisili: 'err_domisili', f_waRef: 'err_waRef', f_sejak: 'err_sejak',
+  f_kondisi: 'err_kondisi', f_jam: 'err_jam', f_hp: 'err_hp' };
+const el = id => document.getElementById(id);
+const form = el('mainForm');
+let submitting = false;
+let uploaded = null;
+let fileState = 'empty';
+let reader = null;
+let fileGeneration = 0;
+let pendingIdentity = null;
+const prefersReducedMotion = () => window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
-// ─────────────────────────────────────────────────────────────
-// STATE FILE UPLOAD
-// ─────────────────────────────────────────────────────────────
-let uploadedB64   = null;
-let uploadedName  = null;
-let uploadedMime  = null;
-
-// ─────────────────────────────────────────────────────────────
-// HELPER: ambil nilai radio
-// ─────────────────────────────────────────────────────────────
 function radioVal(name) {
-  const el = document.querySelector(`input[name="${name}"]:checked`);
-  return el ? el.value : '';
+  const checked = document.querySelector('input[name="' + name + '"]:checked');
+  return checked ? checked.value : '';
 }
-
-// ─────────────────────────────────────────────────────────────
-// HELPER: tampilkan / sembunyikan field error
-// ─────────────────────────────────────────────────────────────
-function showFieldErr(errId, inputEl) {
-  const errEl = document.getElementById(errId);
-  if (errEl) errEl.classList.add('show');
-  if (inputEl) inputEl.classList.add('invalid');
+function badSignal() { return ['Kurang Bagus', 'Sangat Jelek'].includes(radioVal('sinyal')); }
+function scrollToElement(target) {
+  if (target) target.scrollIntoView({ behavior: prefersReducedMotion() ? 'auto' : 'smooth', block: 'center' });
 }
-function clearFieldErr(errId, inputEl) {
-  const errEl = document.getElementById(errId);
-  if (errEl) errEl.classList.remove('show');
-  if (inputEl) inputEl.classList.remove('invalid');
+function normalizePhone(value) {
+  if (!/^[+\d\s().-]+$/.test(value)) return '';
+  let phone = value.replace(/[\s().-]/g, '').replace(/^00/, '+');
+  if (/^0[789]0\d{8}$/.test(phone)) phone = '+81' + phone.slice(1);
+  else if (/^08/.test(phone)) phone = '+62' + phone.slice(1);
+  else if (/^0[1-9]/.test(phone)) phone = '+81' + phone.slice(1);
+  else if (/^(62|81)/.test(phone)) phone = '+' + phone;
+  return /^(?:\+628\d{7,11}|\+81[1-9]\d{8,9})$/.test(phone) ? phone : '';
 }
-
-// ─────────────────────────────────────────────────────────────
-// CONDITIONAL SECTIONS — sinyal radio logic
-// ─────────────────────────────────────────────────────────────
-const sec3a = document.getElementById('sec3a');
-const sec3b = document.getElementById('sec3b');
-const signalBtns = document.querySelectorAll('.signal-btn');
-
-document.querySelectorAll('input[name="sinyal"]').forEach(radio => {
-  radio.addEventListener('change', function () {
-    const val = this.value;
-
-    // Reset semua visual signal-btn
-    signalBtns.forEach(btn => btn.classList.remove('is-good', 'is-bad'));
-
-    const parentBtn = this.closest('.signal-btn');
-    if (val === 'Sangat Bagus' || val === 'Bagus') {
-      parentBtn.classList.add('is-good');
-      sec3a.classList.add('show');
-      sec3b.classList.remove('show');
-      resetSection3b();
-    } else {
-      parentBtn.classList.add('is-bad');
-      sec3b.classList.add('show');
-      sec3a.classList.remove('show');
-      resetSection3a();
-    }
-
-    clearFieldErr('err_sinyal');
-    updateProgress();
-
-    // Scroll ke section berikutnya
-    setTimeout(() => {
-      const target = (val === 'Sangat Bagus' || val === 'Bagus') ? sec3a : sec3b;
-      target.scrollIntoView({ behavior: 'smooth', block: 'start' });
-    }, 150);
-  });
-});
-
-function resetSection3a() {
-  document.querySelectorAll('input[name="autodebet"]').forEach(r => r.checked = false);
-  document.querySelectorAll('input[name="adaReferral"]').forEach(r => r.checked = false);
-  document.getElementById('refDetail').classList.remove('show');
-  document.getElementById('f_namaRef').value = '';
-  document.getElementById('f_waRef').value = '';
-  document.getElementById('f_saran').value = '';
-}
-function resetSection3b() {
-  document.getElementById('f_sejak').value = '';
-  document.querySelectorAll('input[name="lokasiKendala"]').forEach(r => r.checked = false);
-  document.getElementById('f_kondisi').value = '';
-  document.getElementById('f_jam').value = '';
-  document.getElementById('f_hp').value = '';
-  removeFile();
-  ['err_sejak','err_lokasi','err_kondisi','err_jam','err_hp'].forEach(id => {
-    const el = document.getElementById(id); if (el) el.classList.remove('show');
-  });
-}
-
-// ─────────────────────────────────────────────────────────────
-// REFERRAL TOGGLE
-// ─────────────────────────────────────────────────────────────
-document.getElementById('r_ada').addEventListener('change', function () {
-  document.getElementById('refDetail').classList.add('show');
-});
-document.getElementById('r_belum').addEventListener('change', function () {
-  document.getElementById('refDetail').classList.remove('show');
-  document.getElementById('f_namaRef').value = '';
-  document.getElementById('f_waRef').value = '';
-});
-
-// ─────────────────────────────────────────────────────────────
-// FILE UPLOAD — Safari-safe: gunakan FileReader → base64
-// ─────────────────────────────────────────────────────────────
-const fileInput  = document.getElementById('f_file');
-const filePreview = document.getElementById('filePreview');
-const prevImg    = document.getElementById('prevImg');
-const prevName   = document.getElementById('prevName');
-const prevSize   = document.getElementById('prevSize');
-
-fileInput.addEventListener('change', handleFileChange);
-
-function handleFileChange() {
-  const file = this.files && this.files[0];
-  if (!file) return;
-
-  // Validasi ukuran (5 MB)
-  if (file.size > 5 * 1024 * 1024) {
-    showGlobalErr('❌ Ukuran file terlalu besar. Maksimal 5 MB.');
-    this.value = '';
-    return;
+function fieldError(id, show, message) {
+  const input = el(id);
+  const error = el(ERROR_MAP[id]);
+  if (error) {
+    if (message) error.textContent = message;
+    error.classList.toggle('show', show);
   }
-
-  // Validasi tipe
-  if (!file.type.startsWith('image/')) {
-    showGlobalErr('❌ File harus berupa gambar (JPG, PNG, HEIC).');
-    this.value = '';
-    return;
-  }
-
-  clearGlobalErr();
-
-  // Gunakan FileReader — cara paling aman di Safari iOS
-  const reader = new FileReader();
-  reader.onload = function (e) {
-    const dataUrl = e.target.result;
-    const parts   = dataUrl.split(',');
-    // parts[0] = "data:image/jpeg;base64", parts[1] = base64 string
-    const mimeFromHeader = parts[0].split(':')[1].split(';')[0];
-
-    uploadedB64  = parts[1];
-    uploadedName = file.name;
-    uploadedMime = mimeFromHeader || file.type || 'image/jpeg';
-
-    // Tampilkan preview
-    prevImg.src = dataUrl;
-    prevName.textContent = file.name;
-    prevSize.textContent = fmtSize(file.size);
-    filePreview.classList.add('show');
-  };
-  reader.onerror = function () {
-    showGlobalErr('❌ Gagal membaca file. Coba pilih file lain.');
-    removeFile();
-  };
-  reader.readAsDataURL(file);
+  input.classList.toggle('invalid', show);
+  input.setAttribute('aria-invalid', String(show));
 }
+function showGlobalErr(message) {
+  el('errGlobal').textContent = message;
+  el('errGlobal').classList.add('show');
+}
+function clearGlobalErr() { el('errGlobal').classList.remove('show'); }
 
-document.getElementById('btnRemove').addEventListener('click', removeFile);
+Object.entries(MAX_LENGTHS).forEach(([id, max]) => el(id).maxLength = max);
+Object.entries(ERROR_MAP).forEach(([id, errorId]) => {
+  el(id).setAttribute('aria-describedby', errorId);
+  el(id).addEventListener('input', () => fieldError(id, false));
+});
+el('err_wa').textContent = '⚠️ Isi nomor WhatsApp Indonesia (+62) atau Jepang (+81) yang valid.';
 
+function clearSection(section) {
+  section.querySelectorAll('input, select, textarea').forEach(input => {
+    if (input.type === 'radio') input.checked = false;
+    else if (input.type !== 'file') input.value = '';
+    if (ERROR_MAP[input.id]) fieldError(input.id, false);
+  });
+  section.querySelectorAll('.field-error').forEach(error => error.classList.remove('show'));
+}
+document.querySelectorAll('input[name="sinyal"]').forEach(input => input.addEventListener('change', () => {
+  const bad = badSignal();
+  el('sec3a').classList.toggle('show', !bad);
+  el('sec3b').classList.toggle('show', bad);
+  clearSection(el(bad ? 'sec3a' : 'sec3b'));
+  if (bad) el('refDetail').classList.remove('show');
+  else removeFile();
+  document.querySelectorAll('.signal-btn').forEach(button => {
+    const selected = button.querySelector('input').checked;
+    button.classList.toggle('is-good', selected && !bad);
+    button.classList.toggle('is-bad', selected && bad);
+  });
+  el('err_sinyal').classList.remove('show');
+  updateProgress();
+}));
+document.querySelectorAll('input[name="adaReferral"]').forEach(input => input.addEventListener('change', () => {
+  const show = radioVal('adaReferral') === 'Ada';
+  el('refDetail').classList.toggle('show', show);
+  if (!show) clearSection(el('refDetail'));
+}));
+document.querySelectorAll('input[name="lokasiKendala"]').forEach(input => input.addEventListener('change', () => el('err_lokasi').classList.remove('show')));
+
+function syncSubmit() {
+  el('btnSubmit').disabled = submitting || fileState === 'reading';
+  el('btnLabel').textContent = submitting ? 'Mengirim…' : fileState === 'reading' ? 'Membaca foto…' : '✉️ Kirim Survey Sekarang';
+  form.setAttribute('aria-busy', String(submitting));
+}
 function removeFile() {
-  fileInput.value = '';
-  uploadedB64  = null;
-  uploadedName = null;
-  uploadedMime = null;
-  prevImg.src  = '';
-  filePreview.classList.remove('show');
+  fileGeneration++;
+  if (reader && reader.readyState === 1) reader.abort();
+  reader = null;
+  uploaded = null;
+  fileState = 'empty';
+  el('f_file').value = '';
+  el('prevImg').removeAttribute('src');
+  el('filePreview').classList.remove('show');
+  el('uploadStatus').textContent = '';
+  syncSubmit();
 }
-
 function fmtSize(bytes) {
-  if (bytes < 1024) return bytes + ' B';
-  if (bytes < 1048576) return (bytes / 1024).toFixed(1) + ' KB';
-  return (bytes / 1048576).toFixed(1) + ' MB';
+  return bytes < 1024 ? bytes + ' B' : bytes < 1048576 ? (bytes / 1024).toFixed(1) + ' KB' : (bytes / 1048576).toFixed(1) + ' MB';
 }
-
-// ─────────────────────────────────────────────────────────────
-// PROGRESS BAR (estimasi kasar berdasarkan isian)
-// ─────────────────────────────────────────────────────────────
-function updateProgress() {
-  const nama   = document.getElementById('f_nama').value.trim();
-  const wa     = document.getElementById('f_wa').value.trim();
-  const lama   = document.getElementById('f_lama').value;
-  const paket  = document.getElementById('f_paket').value;
-  const dom    = document.getElementById('f_domisili').value.trim();
-  const sinyal = radioVal('sinyal');
-
-  let filled = 0;
-  if (nama)   filled++;
-  if (wa)     filled++;
-  if (lama)   filled++;
-  if (paket)  filled++;
-  if (dom)    filled++;
-  if (sinyal) filled += 2;
-
-  const pct = Math.min(100, Math.round((filled / 7) * 100));
-  document.getElementById('progressFill').style.width = pct + '%';
+function imageMime(file) {
+  if (['image/jpeg', 'image/png', 'image/heic', 'image/heif'].includes(file.type)) return file.type;
+  if (file.type) return '';
+  const extension = file.name.split('.').pop().toLowerCase();
+  return { jpg: 'image/jpeg', jpeg: 'image/jpeg', png: 'image/png', heic: 'image/heic', heif: 'image/heif' }[extension] || '';
 }
-
-['f_nama','f_wa','f_lama','f_paket','f_domisili'].forEach(id => {
-  const el = document.getElementById(id);
-  if (el) el.addEventListener('input', updateProgress);
-});
-
-// ─────────────────────────────────────────────────────────────
-// CLEAR VALIDATION ON INPUT
-// ─────────────────────────────────────────────────────────────
-const mappings = {
-  f_nama:     'err_nama',
-  f_wa:       'err_wa',
-  f_lama:     'err_lama',
-  f_paket:    'err_paket',
-  f_domisili: 'err_domisili',
-  f_sejak:    'err_sejak',
-  f_kondisi:  'err_kondisi',
-  f_jam:      'err_jam',
-  f_hp:       'err_hp',
-};
-Object.entries(mappings).forEach(([inputId, errId]) => {
-  const el = document.getElementById(inputId);
-  if (el) el.addEventListener('input', () => clearFieldErr(errId, el));
-});
-
-// ─────────────────────────────────────────────────────────────
-// VALIDASI FORM
-// ─────────────────────────────────────────────────────────────
-function validateForm() {
-  let ok = true;
-
-  function chk(inputId, errId, cond) {
-    const el = document.getElementById(inputId);
-    if (cond) { showFieldErr(errId, el); ok = false; }
-    else       { clearFieldErr(errId, el); }
-  }
-
-  // Bagian 1
-  chk('f_nama',     'err_nama',    !document.getElementById('f_nama').value.trim());
-  chk('f_wa',       'err_wa',      !document.getElementById('f_wa').value.trim());
-  chk('f_lama',     'err_lama',    !document.getElementById('f_lama').value);
-  chk('f_paket',    'err_paket',   !document.getElementById('f_paket').value);
-  chk('f_domisili', 'err_domisili',!document.getElementById('f_domisili').value.trim());
-
-  // Bagian 2
-  const sinyal = radioVal('sinyal');
-  const errSinyal = document.getElementById('err_sinyal');
-  if (!sinyal) { errSinyal.classList.add('show'); ok = false; }
-  else          { errSinyal.classList.remove('show'); }
-
-  // Bagian 3B (hanya jika sinyal jelek)
-  if (sinyal === 'Kurang Bagus' || sinyal === 'Sangat Jelek') {
-    chk('f_sejak',   'err_sejak',  !document.getElementById('f_sejak').value.trim());
-    chk('f_kondisi', 'err_kondisi',!document.getElementById('f_kondisi').value);
-    chk('f_jam',     'err_jam',    !document.getElementById('f_jam').value.trim());
-    chk('f_hp',      'err_hp',     !document.getElementById('f_hp').value.trim());
-
-    const lokasi = radioVal('lokasiKendala');
-    const errLok = document.getElementById('err_lokasi');
-    if (!lokasi) { errLok.classList.add('show'); ok = false; }
-    else          { errLok.classList.remove('show'); }
-  }
-
-  return ok;
-}
-
-// ─────────────────────────────────────────────────────────────
-// GLOBAL ERROR MESSAGE
-// ─────────────────────────────────────────────────────────────
-function showGlobalErr(msg) {
-  const el = document.getElementById('errGlobal');
-  el.textContent = msg;
-  el.classList.add('show');
-}
-function clearGlobalErr() {
-  document.getElementById('errGlobal').classList.remove('show');
-}
-
-// ─────────────────────────────────────────────────────────────
-// SUBMIT HANDLER
-// ─────────────────────────────────────────────────────────────
-document.getElementById('mainForm').addEventListener('submit', async function (e) {
-  e.preventDefault();
+function handleFile(file) {
+  removeFile();
+  if (!file) return;
+  if (!file.size || file.size > MAX_IMAGE_BYTES) { showGlobalErr('❌ Ukuran foto harus lebih dari 0 dan maksimal 5 MB.'); return; }
+  const mime = imageMime(file);
+  if (!mime || file.name.length > 255) { showGlobalErr('❌ File harus berupa gambar JPG, PNG, atau HEIC dengan nama maksimal 255 karakter.'); return; }
   clearGlobalErr();
+  fileState = 'reading';
+  syncSubmit();
+  el('uploadStatus').textContent = 'Membaca foto…';
+  const generation = fileGeneration;
+  const activeReader = new FileReader();
+  reader = activeReader;
+  activeReader.onload = () => {
+    if (generation !== fileGeneration) return;
+    const result = activeReader.result;
+    if (typeof result !== 'string' || !result.includes(',')) { removeFile(); showGlobalErr('❌ Foto tidak dapat dibaca. Pilih ulang foto.'); return; }
+    uploaded = { imageBase64: result.slice(result.indexOf(',') + 1), imageName: file.name, imageType: mime };
+    fileState = 'ready';
+    el('prevImg').src = 'data:' + mime + ';base64,' + uploaded.imageBase64;
+    el('prevName').textContent = file.name;
+    el('prevSize').textContent = fmtSize(file.size);
+    el('filePreview').classList.add('show');
+    el('uploadStatus').textContent = 'Foto siap dikirim.';
+    reader = null;
+    syncSubmit();
+  };
+  activeReader.onerror = () => {
+    if (generation !== fileGeneration) return;
+    removeFile();
+    showGlobalErr('❌ Gagal membaca foto. Coba pilih foto lain.');
+  };
+  activeReader.readAsDataURL(file);
+}
+el('f_file').addEventListener('change', event => handleFile(event.target.files && event.target.files[0]));
+el('btnRemove').addEventListener('click', removeFile);
 
-  if (!validateForm()) {
-    // Scroll ke error pertama
-    const first = document.querySelector('.field-error.show, .err-global.show');
-    if (first) first.scrollIntoView({ behavior: 'smooth', block: 'center' });
+function requiredIds() {
+  return ['f_nama', 'f_wa', 'f_lama', 'f_paket', 'f_domisili'].concat(badSignal() ? ['f_sejak', 'f_kondisi', 'f_jam', 'f_hp'] : []);
+}
+function validField(id) {
+  const value = el(id).value.trim();
+  return Boolean(value) && (!MAX_LENGTHS[id] || value.length <= MAX_LENGTHS[id]) &&
+    (id !== 'f_wa' || Boolean(normalizePhone(value)));
+}
+function updateProgress() {
+  const ids = requiredIds();
+  const checks = ids.map(validField).concat([Boolean(radioVal('sinyal'))]);
+  if (badSignal()) checks.push(Boolean(radioVal('lokasiKendala')));
+  const pct = Math.round(checks.filter(Boolean).length / checks.length * 100);
+  el('progressFill').style.width = pct + '%';
+  el('progressTrack').setAttribute('aria-valuenow', String(pct));
+  if (el('progressText')) el('progressText').textContent = pct + '% terisi';
+}
+form.addEventListener('input', updateProgress);
+form.addEventListener('change', updateProgress);
+
+function validateForm() {
+  let valid = true;
+  requiredIds().forEach(id => {
+    const invalid = !validField(id);
+    fieldError(id, invalid);
+    if (invalid) valid = false;
+  });
+  Object.keys(MAX_LENGTHS).forEach(id => {
+    if (el(id).value.length > MAX_LENGTHS[id]) {
+      if (ERROR_MAP[id]) fieldError(id, true, '⚠️ Isian terlalu panjang.');
+      else showGlobalErr('❌ Isian terlalu panjang. Periksa nama teman dan saran.');
+      valid = false;
+    }
+  });
+  const noSignal = !radioVal('sinyal');
+  el('err_sinyal').classList.toggle('show', noSignal);
+  if (noSignal) valid = false;
+  const noLocation = badSignal() && !radioVal('lokasiKendala');
+  el('err_lokasi').classList.toggle('show', noLocation);
+  if (noLocation) valid = false;
+  const invalidReferral = Boolean(el('f_waRef').value.trim()) && !normalizePhone(el('f_waRef').value.trim());
+  fieldError('f_waRef', invalidReferral);
+  return valid && !invalidReferral;
+}
+function buildPayload() {
+  const payload = {};
+  Object.entries(FIELD_MAP).forEach(([id, key]) => payload[key] = el(id).value.trim());
+  ['sinyal', 'autodebet', 'adaReferral', 'lokasiKendala'].forEach(name => payload[name] = radioVal(name));
+  if (uploaded) Object.assign(payload, uploaded);
+  return payload;
+}
+function newRequestId() {
+  if (crypto.randomUUID) return crypto.randomUUID();
+  const bytes = crypto.getRandomValues(new Uint8Array(16));
+  bytes[6] = (bytes[6] & 15) | 64;
+  bytes[8] = (bytes[8] & 63) | 128;
+  const hex = Array.from(bytes, n => n.toString(16).padStart(2, '0')).join('');
+  return [hex.slice(0,8),hex.slice(8,12),hex.slice(12,16),hex.slice(16,20),hex.slice(20)].join('-');
+}
+async function identityFor(payload) {
+  const signature = JSON.stringify(payload);
+  if (pendingIdentity && pendingIdentity.signature === signature) return pendingIdentity.requestId;
+  let digest = '';
+  if (crypto.subtle) {
+    digest = Array.from(new Uint8Array(await crypto.subtle.digest('SHA-256', new TextEncoder().encode(signature))), n => n.toString(16).padStart(2, '0')).join('');
+  }
+  let previous = null;
+  try { previous = JSON.parse(sessionStorage.getItem('jp-survey-pending-v2')); } catch (_) { /* Storage may be unavailable. */ }
+  const requestId = digest && previous && previous.digest === digest &&
+    /^[a-f0-9-]{36}$/i.test(previous.requestId) ? previous.requestId : newRequestId();
+  pendingIdentity = { signature: signature, requestId: requestId };
+  if (digest) {
+    try { sessionStorage.setItem('jp-survey-pending-v2', JSON.stringify({ requestId: requestId, digest: digest })); } catch (_) { /* In-memory retry still works. */ }
+  }
+  return requestId;
+}
+
+form.addEventListener('submit', async event => {
+  event.preventDefault();
+  if (submitting || fileState === 'reading') return;
+  clearGlobalErr();
+  if (!/^https:\/\/script\.google\.com\/macros\/s\/[^/]+\/exec$/.test(GAS_URL)) {
+    showGlobalErr('Layanan survei belum terhubung. Hubungi tim JP Smart SIM. Isian belum dikirim.');
+    scrollToElement(el('errGlobal'));
     return;
   }
-
-  const sinyal = radioVal('sinyal');
-
-  // Bangun payload
-  const payload = {
-    // Bagian 1
-    nama:        document.getElementById('f_nama').value.trim(),
-    whatsapp:    document.getElementById('f_wa').value.trim(),
-    lamaUse:     document.getElementById('f_lama').value,
-    paket:       document.getElementById('f_paket').value,
-    domisili:    document.getElementById('f_domisili').value.trim(),
-    // Bagian 2
-    sinyal:      sinyal,
-    // Bagian 3A
-    autodebet:   radioVal('autodebet'),
-    adaReferral: radioVal('adaReferral'),
-    namaReferral: document.getElementById('f_namaRef').value.trim(),
-    waReferral:  document.getElementById('f_waRef').value.trim(),
-    saran:       document.getElementById('f_saran').value.trim(),
-    // Bagian 3B
-    sejakkendala:  document.getElementById('f_sejak').value.trim(),
-    lokasiKendala: radioVal('lokasiKendala'),
-    kondisiArea:   document.getElementById('f_kondisi').value,
-    jamAktivitas:  document.getElementById('f_jam').value.trim(),
-    merkHP:        document.getElementById('f_hp').value.trim(),
-  };
-
-  // Lampirkan file (base64) jika ada
-  if (uploadedB64) {
-    payload.imageBase64 = uploadedB64;
-    payload.imageName   = uploadedName;
-    payload.imageType   = uploadedMime;
+  if (!validateForm()) {
+    const first = document.querySelector('.invalid, .field-error.show, .err-global.show');
+    if (first && first.matches('input,select,textarea')) first.focus({ preventScroll: true });
+    scrollToElement(first);
+    return;
   }
-
-  // Loading state
-  const btn      = document.getElementById('btnSubmit');
-  const btnLabel = document.getElementById('btnLabel');
-  btn.disabled   = true;
-  btnLabel.innerHTML = '<div class="spinner"></div> Mengirim…';
-
+  const payload = buildPayload();
+  submitting = true;
+  syncSubmit();
+  const inputs = Array.from(form.querySelectorAll('input, select, textarea, button')).filter(input => input.id !== 'btnSubmit');
+  inputs.forEach(input => input.disabled = true);
+  let timeout;
+  let confirmed = false;
   try {
-    /*
-     * ANTI-CORS TRICK:
-     * Gunakan Content-Type: text/plain (bukan application/json)
-     * → browser tidak kirim preflight OPTIONS request
-     * → GAS menerima request langsung & response-nya bisa dibaca
-     *
-     * Di sisi GAS, body dibaca via e.postData.contents lalu JSON.parse()
-     */
-    const resp = await fetch(GAS_URL, {
-      method:  'POST',
-      headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-      body:    JSON.stringify(payload),
-    });
-
+    payload.requestId = await identityFor(payload);
+    const controller = new AbortController();
+    timeout = setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS);
+    // Block a mixed v2 frontend/v1 backend rollout before any write can happen.
+    const health = await fetch(GAS_URL, { method: 'GET', signal: controller.signal, cache: 'no-store' });
+    let version;
+    try { version = health.ok && await health.json(); } catch (_) { version = null; }
+    if (!version || version.version !== '2.0.0' || version.status !== 'active') {
+      throw new Error('Versi layanan survei belum sesuai. Isian belum dikirim. Hubungi tim JP Smart SIM.');
+    }
+    const response = await fetch(GAS_URL, { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+      body: JSON.stringify(payload), signal: controller.signal });
+    if (!response.ok) throw new Error('Server belum mengonfirmasi penyimpanan (HTTP ' + response.status + '). Coba kembali dengan isian yang sama.');
     let result;
-    try {
-      result = await resp.json();
-    } catch (_) {
-      // Jika response tidak bisa di-parse (misal redirect HTML),
-      // anggap berhasil — data biasanya sudah masuk
-      result = { success: true };
+    try { result = await response.json(); }
+    catch (_) { throw new Error('Respons server tidak dapat dibaca. Penyimpanan belum dapat dipastikan. Coba kembali dengan isian yang sama.'); }
+    if (!result || typeof result !== 'object' || typeof result.success !== 'boolean') throw new Error('Respons server tidak valid. Penyimpanan belum dapat dipastikan.');
+    if (result.success !== true) throw new Error(typeof result.message === 'string' ? result.message.slice(0,500) : 'Server menolak kiriman. Periksa isian dan coba kembali.');
+    if (result.requestId !== payload.requestId || !Array.isArray(result.warnings) || result.warnings.some(w => typeof w !== 'string')) {
+      throw new Error('Konfirmasi kiriman tidak sesuai. Penyimpanan belum dapat dipastikan. Coba kembali dengan isian yang sama.');
     }
-
-    if (result.success) {
-      document.getElementById('mainForm').style.display = 'none';
-      document.getElementById('submitArea').style.display = 'none';
-      document.getElementById('successCard').classList.add('show');
-      document.getElementById('progressFill').style.width = '100%';
-      window.scrollTo({ top: 0, behavior: 'smooth' });
-    } else {
-      throw new Error(result.message || 'Respons server tidak dikenal.');
+    confirmed = true;
+    form.style.display = 'none';
+    el('successWarning').textContent = result.warnings.join(' ').slice(0,1000);
+    el('successWarning').hidden = !result.warnings.length;
+    el('successCard').classList.add('show');
+    el('progressFill').style.width = '100%';
+    el('progressTrack').setAttribute('aria-valuenow', '100');
+    if (el('progressText')) el('progressText').textContent = '100% terkirim';
+    el('successCard').focus({ preventScroll: true });
+    window.scrollTo({ top: 0, behavior: prefersReducedMotion() ? 'auto' : 'smooth' });
+    pendingIdentity = null;
+    try { sessionStorage.removeItem('jp-survey-pending-v2'); } catch (_) { /* No data is stored in fallback mode. */ }
+  } catch (error) {
+    const message = error.name === 'AbortError' ? 'Waktu tunggu habis. Penyimpanan belum dapat dipastikan. Coba kembali tanpa mengubah isian.' :
+      !navigator.onLine ? 'Tidak ada koneksi internet. Sambungkan lalu coba kembali dengan isian yang sama.' :
+        error instanceof TypeError ? 'Koneksi terputus. Penyimpanan belum dapat dipastikan. Coba kembali dengan isian yang sama.' : error.message;
+    showGlobalErr('❌ ' + message);
+    scrollToElement(el('errGlobal'));
+  } finally {
+    clearTimeout(timeout);
+    if (!confirmed) {
+      inputs.forEach(input => input.disabled = false);
+      submitting = false;
+      syncSubmit();
     }
-
-  } catch (err) {
-    let msg = '❌ Gagal mengirim survey. ';
-    if (!navigator.onLine) {
-      msg += 'Tidak ada koneksi internet. Sambungkan dulu lalu coba lagi.';
-    } else if (err.message && err.message.toLowerCase().includes('failed to fetch')) {
-      msg += 'Koneksi bermasalah. Pastikan GAS_URL sudah benar dan coba lagi.';
-    } else {
-      msg += err.message;
-    }
-    showGlobalErr(msg);
-    btn.disabled  = false;
-    btnLabel.innerHTML = '✉️ Kirim Survey Sekarang';
-    document.getElementById('errGlobal').scrollIntoView({ behavior: 'smooth', block: 'center' });
   }
 });
+updateProgress();
+syncSubmit();
+
 </script>
 </body>
 </html>
